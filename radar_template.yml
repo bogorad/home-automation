@@ -1,0 +1,151 @@
+substitutions:
+  location: "location_name"
+  name: "device_name"
+  LD1115H_INPUT_PIN: "33"
+  TXPIN: "21"
+  RXPIN: "25"
+
+packages:
+  esphome.bluetooth-proxy: github://esphome/bluetooth-proxies/m5stack-atom-lite.yaml@main
+esphome:
+  name: ${name}
+  name_add_mac_suffix: false
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+#############################################################################################################################
+uart:
+  id: uart_bus
+  tx_pin: ${TXPIN}
+  rx_pin: ${RXPIN}
+  baud_rate: 115200
+  debug:
+    direction: BOTH
+    dummy_receiver: true
+    after:
+      delimiter: "\n"
+    sequence:
+      - lambda: UARTDebug::log_string(direction, bytes);
+
+switch:
+  - platform: safe_mode
+    internal: true
+    name: use_safe_mode
+
+
+number:
+- platform: template
+  name: ${name}_motion_detection_sensitivity
+  id: ${name}_motion_detection_sensitivity
+  min_value: 1
+  max_value: 240
+  initial_value: 120
+  optimistic: true
+  step: 1
+  restore_value: true    
+  mode: box
+  set_action:
+    - uart.write: !lambda
+        int cm = (int)x;
+        std::string cms = "th1=" + to_string(cm) +" \n";
+        return std::vector<unsigned char>(cms.begin(), cms.end());
+    - delay: 1s
+    - uart.write: "save\n"
+
+- platform: template
+  name: ${name}_presence_detection_sensitivity
+  id: ${name}_presence_detection_sensitivity
+  min_value: 1
+  max_value: 450
+  initial_value: 250
+  optimistic: true
+  step: 1
+  restore_value: true    
+  mode: box
+  set_action:
+    - uart.write: !lambda
+                    int cm = (int)x;
+                    std::string cms = "th2=" + to_string(cm) +" \n";
+                    return std::vector<unsigned char>(cms.begin(), cms.end());
+    - delay: 1s
+    - uart.write: "save\n"
+
+
+- platform: template
+  name: ${name}_delay_detection_time
+  id: ${name}_delay_detection_time
+  min_value: 1
+  max_value: 60
+  initial_value: 5
+  optimistic: true
+  step: 1
+  restore_value: true    
+  mode: box
+  set_action:
+    - uart.write: !lambda
+                    int cm = (int)x;
+                    std::string cms = "dtime=" + to_string(cm) +" \n";
+                    return std::vector<unsigned char>(cms.begin(), cms.end());
+    - delay: 1s
+    - uart.write: "save\n"
+
+- platform: template
+  name: ${name}_gpio_pullup_mov_times
+  id: ${name}_gpio_pullup_mov_times
+  min_value: 1
+  max_value: 60
+  initial_value: 3
+  optimistic: true
+  step: 1
+  restore_value: true    
+  mode: box
+  set_action:
+    - uart.write: !lambda
+                    int cm = (int)x;
+                    std::string cms = "mov_sn=" + to_string(cm) +" \n";
+                    return std::vector<unsigned char>(cms.begin(), cms.end());
+    - delay: 1s
+    - uart.write: "save\n"
+
+- platform: template
+  name: ${name}_gpio_pullup_occ_times
+  id: ${name}_gpio_pullup_occ_times
+  min_value: 1
+  max_value: 60
+  initial_value: 5
+  optimistic: true
+  step: 1
+  restore_value: true    
+  mode: box
+  set_action:
+    - uart.write: !lambda
+                    int cm = (int)x;
+                    std::string cms = "occ_sn=" + to_string(cm) +" \n";
+                    return std::vector<unsigned char>(cms.begin(), cms.end());
+    - delay: 1s
+    - uart.write: "save\n"
+
+binary_sensor:
+- platform: gpio
+  name: occup_${location}
+  device_class: occupancy
+  pin:
+    number: ${LD1115H_INPUT_PIN}
+    mode:
+      input: true
+      pullup: false
+
+# Configuration of M5 Atom Lite onboard RGB LED    
+light:
+- platform: fastled_clockless
+  chipset: WS2812
+  pin: 27
+  num_leds: 1
+  rgb_order: grb
+  name: "FastLED Light"
+
+ota:
+  password: !secret ota_password
+
