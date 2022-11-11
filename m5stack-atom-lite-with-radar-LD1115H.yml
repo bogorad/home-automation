@@ -37,10 +37,10 @@ switch:
 
 number:
 - platform: template
-  name: ${name}_motion_detection_sensitivity
-  id: ${name}_motion_detection_sensitivity
-  min_value: 1
-  max_value: 240
+  name: mov_sensitivity
+  id: mov_sensitivity
+  min_value: 0
+  max_value: 65535
   initial_value: 120
   optimistic: true
   step: 1
@@ -55,10 +55,10 @@ number:
     - uart.write: "save\n"
 
 - platform: template
-  name: ${name}_presence_detection_sensitivity
-  id: ${name}_presence_detection_sensitivity
-  min_value: 1
-  max_value: 450
+  name: occ_sensitivity
+  id: occ_sensitivity
+  min_value: 0
+  max_value: 65535
   initial_value: 250
   optimistic: true
   step: 1
@@ -72,10 +72,27 @@ number:
     - delay: 1s
     - uart.write: "save\n"
 
+- platform: template
+  name: det_range
+  id: det_range
+  min_value: 0
+  max_value: 65535
+  initial_value: 250
+  optimistic: true
+  step: 1
+  restore_value: true    
+  mode: box
+  set_action:
+    - uart.write: !lambda
+                    int cm = (int)x;
+                    std::string cms = "th3=" + to_string(cm) +" \n";
+                    return std::vector<unsigned char>(cms.begin(), cms.end());
+    - delay: 1s
+    - uart.write: "save\n"
 
 - platform: template
-  name: ${name}_delay_detection_time
-  id: ${name}_delay_detection_time
+  name: delay_det_time
+  id: delay_det_time
   min_value: 1
   max_value: 60
   initial_value: 5
@@ -92,10 +109,10 @@ number:
     - uart.write: "save\n"
 
 - platform: template
-  name: ${name}_gpio_pullup_mov_times
-  id: ${name}_gpio_pullup_mov_times
-  min_value: 1
-  max_value: 60
+  name: mov_sn
+  id: mov_sn
+  min_value: 0
+  max_value: 255
   initial_value: 3
   optimistic: true
   step: 1
@@ -110,10 +127,10 @@ number:
     - uart.write: "save\n"
 
 - platform: template
-  name: ${name}_gpio_pullup_occ_times
-  id: ${name}_gpio_pullup_occ_times
-  min_value: 1
-  max_value: 60
+  name: occ_sn
+  id: occ_sn
+  min_value: 0
+  max_value: 255
   initial_value: 5
   optimistic: true
   step: 1
@@ -127,9 +144,46 @@ number:
     - delay: 1s
     - uart.write: "save\n"
 
+- platform: template
+  name: ind_min
+  id: ind_min
+  min_value: 0
+  max_value: 32
+  initial_value: 2
+  optimistic: true
+  step: 1
+  restore_value: true    
+  mode: box
+  set_action:
+    - uart.write: !lambda
+                    int cm = (int)x;
+                    std::string cms = "ind_min=" + to_string(cm) +" \n";
+                    return std::vector<unsigned char>(cms.begin(), cms.end());
+    - delay: 1s
+    - uart.write: "save\n"
+
+- platform: template
+  name: ind_max
+  id: ind_max
+  min_value: 0
+  max_value: 32
+  initial_value: 32
+  optimistic: true
+  step: 1
+  restore_value: true    
+  mode: box
+  set_action:
+    - uart.write: !lambda
+                    int cm = (int)x;
+                    std::string cms = "ind_max=" + to_string(cm) +" \n";
+                    return std::vector<unsigned char>(cms.begin(), cms.end());
+    - delay: 1s
+    - uart.write: "save\n"
+
 binary_sensor:
 - platform: gpio
-  name: occup_${location}
+  name: occupancy
+  id: occupancy
   device_class: occupancy
   pin:
     number: ${LD1115H_INPUT_PIN}
