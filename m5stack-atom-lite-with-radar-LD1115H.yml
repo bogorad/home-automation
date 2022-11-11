@@ -1,9 +1,25 @@
 substitutions:
-  location: "location_name"
-  name: "device_name"
+  location: "living"
+  name: "radar_living"
   LD1115H_INPUT_PIN: "33"
   TXPIN: "21"
   RXPIN: "25"
+
+#############################################################################################################################
+# Typical configuration:
+# ======================
+# delay_det_time: 5
+# det_range: 50000 (long-range, higher value means detection at shorter range)
+#
+# ind_max: 32
+# ind_min: 2
+#
+# mov_sensitivity: 1400
+# mos_sn: 4
+#
+# occ_sensitivity: 250
+# occ_sn: 6
+#############################################################################################################################
 
 packages:
   esphome.bluetooth-proxy: github://esphome/bluetooth-proxies/m5stack-atom-lite.yaml@main
