@@ -182,8 +182,8 @@ number:
 
 binary_sensor:
 - platform: gpio
-  name: occupancy
-  id: occupancy
+  name: ${name}_occupancy
+  id: ${name}_occupancy
   device_class: occupancy
   pin:
     number: ${LD1115H_INPUT_PIN}
