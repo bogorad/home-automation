@@ -12,12 +12,14 @@ substitutions:
 # delay_det_time: 5
 # det_range: 50000 (long-range, higher value means detection at shorter range)
 #
-# ind_max: 32
+# ind_max: 32 (no idea what this is)
 # ind_min: 2
 #
-# mov_sensitivity: 1400
+### motion threshold - values below this are not reported back and don't cause trigger
+# mov_sensitivity: 1400 
 # mos_sn: 4
 #
+### occupancy threshold - values below this are not reported back
 # occ_sensitivity: 250
 # occ_sn: 6
 #############################################################################################################################
