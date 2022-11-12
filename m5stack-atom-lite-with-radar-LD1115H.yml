@@ -1,9 +1,10 @@
 substitutions:
-  location: "living"
-  name: "radar_living"
-  LD1115H_INPUT_PIN: "33"
-  TXPIN: "21"
-  RXPIN: "25"
+  LOCATION: "LocationName"
+  DEVICE_NAME: "Radar ${LOCATION}"
+  DEVICE_ID: radar_${LOCATION}
+  INPUT_PIN: "33"
+  TX_PIN: "21"
+  RX_PIN: "25"
 
 #############################################################################################################################
 # Typical configuration:
@@ -23,110 +24,171 @@ substitutions:
 
 packages:
   esphome.bluetooth-proxy: github://esphome/bluetooth-proxies/m5stack-atom-lite.yaml@main
+
 esphome:
-  name: ${name}
+  name: ${DEVICE_ID}
   name_add_mac_suffix: false
+  on_boot:    #LD1115H Initial Setting
+    priority: -200
+    then:
+      - uart.write:
+          id: LD1115H_UART_BUS
+          data: !lambda |-
+            std::string th1st = "th1=" + str_sprintf("%.0f",id(${DEVICE_ID}_th1_motion).state) +" \n";
+            return std::vector<uint8_t>(th1st.begin(), th1st.end());
+      - delay: 250ms
+      - uart.write:
+          id: LD1115H_UART_BUS
+          data: !lambda |-
+            std::string th2st = "th2=" + str_sprintf("%.0f",id(${DEVICE_ID}_th2_occupancy).state) +" \n";
+            return std::vector<uint8_t>(th2st.begin(), th2st.end());
+      - delay: 250ms
+      - uart.write:
+          id: LD1115H_UART_BUS
+          data: !lambda |-
+            std::string th3st = "th3=" + str_sprintf("%.0f",id(${DEVICE_ID}_th3_range).state) +" \n";
+            return std::vector<uint8_t>(th3st.begin(), th3st.end());
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/ssieb/custom_components #Thanks for @ssieb components.
+    components: [ serial ]
 
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
-#############################################################################################################################
+# Configuration of M5 Atom Lite onboard RGB LED    
+light:
+- platform: fastled_clockless
+  name: "${DEVICE_ID} FastLED Light"
+  id: ${DEVICE_ID}_fastled
+  icon: "mdi:led-outline"
+  chipset: WS2812
+  pin: 27 # Fixed value for M5stack Atom Lite
+  num_leds: 1
+  rgb_order: grb
+
+ota:
+  password: !secret ota_password
+
+logger:
+  level: DEBUG
+
+binary_sensor:
+- platform: gpio
+  name: "${DEVICE_ID} Occupancy"
+  id: ${DEVICE_ID}_occupancy
+  device_class: occupancy
+  icon: "mdi:radar"
+  pin:
+    number: ${INPUT_PIN}
+    mode:
+      input: true
+      pullup: false
+
 uart:
-  id: uart_bus
-  tx_pin: ${TXPIN}
-  rx_pin: ${RXPIN}
+  id: LD1115H_UART_BUS
+  tx_pin: ${TX_PIN}
+  rx_pin: ${RX_PIN}
   baud_rate: 115200
-  debug:
-    direction: BOTH
-    dummy_receiver: true
-    after:
-      delimiter: "\n"
-    sequence:
-      - lambda: UARTDebug::log_string(direction, bytes);
-
-switch:
-  - platform: safe_mode
-    internal: true
-    name: use_safe_mode
-
+  setup_priority: 200 #Set Priority To Prevent Boot Loop or Fail
+#  debug:
+#    direction: BOTH
+#    dummy_receiver: true
+#    after:
+#      delimiter: "\n"
+#    sequence:
+#      - lambda: UARTDebug::log_string(direction, bytes);
 
 number:
 - platform: template
-  name: mov_sensitivity
-  id: mov_sensitivity
-  min_value: 0
-  max_value: 65535
+  name: "${DEVICE_ID} th1 motion"
+  id: ${DEVICE_ID}_th1_motion
+  icon: "mdi:cogs"
+  optimistic: true
+  restore_value: true
   initial_value: 120
-  optimistic: true
-  step: 1
-  restore_value: true    
-  mode: box
+  min_value: 20
+  max_value: 1200
+  step: 10
+  mode: slider
   set_action:
-    - uart.write: !lambda
-        int cm = (int)x;
-        std::string cms = "th1=" + to_string(cm) +" \n";
-        return std::vector<unsigned char>(cms.begin(), cms.end());
-    - delay: 1s
-    - uart.write: "save\n"
+    then:
+      - uart.write:
+          id: LD1115H_UART_BUS
+          data: !lambda |-
+            std::string th1st = "th1=" + str_sprintf("%.0f",x) +" \n";
+            return std::vector<uint8_t>(th1st.begin(), th1st.end());
+      - delay: 250ms
+      - uart.write: "save\n"
+
 
 - platform: template
-  name: occ_sensitivity
-  id: occ_sensitivity
+  name: "${DEVICE_ID} th2 occupancy"
+  id: ${DEVICE_ID}_th2_occupancy
+  icon: "mdi:cogs"
+  optimistic: true
+  restore_value: true    
+  initial_value: 250
+  min_value: 50
+  max_value: 2500
+  step: 1
+  mode: slider
+  set_action:
+    then:
+      - uart.write:
+          id: LD1115H_UART_BUS
+          data: !lambda |-
+            std::string th2st = "th2=" + str_sprintf("%.0f",x) +" \n";
+            return std::vector<uint8_t>(th2st.begin(), th2st.end());
+      - delay: 250ms
+      - uart.write: "save\n"
+
+- platform: template
+  name: "${DEVICE_ID} th3 range"
+  id:   ${DEVICE_ID}_th3_range
+  icon: "mdi:cogs"
   min_value: 0
   max_value: 65535
   initial_value: 250
   optimistic: true
   step: 1
-  restore_value: true    
-  mode: box
+  restore_value: true
+  mode: slider
   set_action:
-    - uart.write: !lambda
-                    int cm = (int)x;
-                    std::string cms = "th2=" + to_string(cm) +" \n";
-                    return std::vector<unsigned char>(cms.begin(), cms.end());
-    - delay: 1s
-    - uart.write: "save\n"
+    then:
+      - uart.write:
+          id: LD1115H_UART_BUS
+          data: !lambda |-
+            std::string th3st = "th3=" + str_sprintf("%.0f",x) +" \n";
+            return std::vector<uint8_t>(th3st.begin(), th3st.end());
+      - delay: 250ms
+      - uart.write: "save\n"
 
 - platform: template
-  name: det_range
-  id: det_range
-  min_value: 0
-  max_value: 65535
-  initial_value: 250
-  optimistic: true
-  step: 1
-  restore_value: true    
-  mode: box
-  set_action:
-    - uart.write: !lambda
-                    int cm = (int)x;
-                    std::string cms = "th3=" + to_string(cm) +" \n";
-                    return std::vector<unsigned char>(cms.begin(), cms.end());
-    - delay: 1s
-    - uart.write: "save\n"
-
-- platform: template
-  name: delay_det_time
-  id: delay_det_time
+  name: "${DEVICE_ID} dtime"
+  id:   ${DEVICE_ID}_delay_det_time
+  icon: "mdi:timer-sand-empty"
   min_value: 1
   max_value: 60
   initial_value: 5
   optimistic: true
   step: 1
-  restore_value: true    
+  restore_value: true
   mode: box
   set_action:
     - uart.write: !lambda
                     int cm = (int)x;
                     std::string cms = "dtime=" + to_string(cm) +" \n";
                     return std::vector<unsigned char>(cms.begin(), cms.end());
-    - delay: 1s
+    - delay: 250ms
     - uart.write: "save\n"
 
 - platform: template
-  name: mov_sn
-  id: mov_sn
+  name: "${DEVICE_ID} mov_sn"
+  id:   ${DEVICE_ID}_mov_sn
   min_value: 0
   max_value: 255
   initial_value: 3
@@ -139,12 +201,12 @@ number:
                     int cm = (int)x;
                     std::string cms = "mov_sn=" + to_string(cm) +" \n";
                     return std::vector<unsigned char>(cms.begin(), cms.end());
-    - delay: 1s
+    - delay: 250ms
     - uart.write: "save\n"
 
 - platform: template
-  name: occ_sn
-  id: occ_sn
+  name: "${DEVICE_ID} occ_sn"
+  id: ${DEVICE_ID}_occ_sn
   min_value: 0
   max_value: 255
   initial_value: 5
@@ -157,12 +219,12 @@ number:
                     int cm = (int)x;
                     std::string cms = "occ_sn=" + to_string(cm) +" \n";
                     return std::vector<unsigned char>(cms.begin(), cms.end());
-    - delay: 1s
+    - delay: 250ms
     - uart.write: "save\n"
 
 - platform: template
-  name: ind_min
-  id: ind_min
+  name: "${DEVICE_ID} ind_min"
+  id:   ${DEVICE_ID}_ind_min
   min_value: 0
   max_value: 32
   initial_value: 2
@@ -175,12 +237,12 @@ number:
                     int cm = (int)x;
                     std::string cms = "ind_min=" + to_string(cm) +" \n";
                     return std::vector<unsigned char>(cms.begin(), cms.end());
-    - delay: 1s
+    - delay: 250ms
     - uart.write: "save\n"
 
 - platform: template
-  name: ind_max
-  id: ind_max
+  name: "${DEVICE_ID} ind_max"
+  id:   ${DEVICE_ID}_ind_max
   min_value: 0
   max_value: 32
   initial_value: 32
@@ -193,29 +255,33 @@ number:
                     int cm = (int)x;
                     std::string cms = "ind_max=" + to_string(cm) +" \n";
                     return std::vector<unsigned char>(cms.begin(), cms.end());
-    - delay: 1s
+    - delay: 250ms
     - uart.write: "save\n"
 
-binary_sensor:
-- platform: gpio
-  name: ${name}_occupancy
-  id: ${name}_occupancy
-  device_class: occupancy
-  pin:
-    number: ${LD1115H_INPUT_PIN}
-    mode:
-      input: true
-      pullup: false
+text_sensor:
+  - platform: template
+    name: "${DEVICE_ID} mov"
+    id: ${DEVICE_ID}_mov
+    icon: "mdi:format-text"
+  - platform: template
+    name: "${DEVICE_ID} occ"
+    id: ${DEVICE_ID}_occ
+    icon: "mdi:format-text"
+  - platform: serial
+    uart_id: LD1115H_UART_BUS
+    name: "${DEVICE_ID} debug"
+    id:    ${DEVICE_ID}_uart_text
+    icon: "mdi:format-text"
+    internal: true #If Don't Want to See UART Receive Data, Set To True
+    on_value:
+      lambda: |-
+        if (id(${DEVICE_ID}_uart_text).state.substr(0,3) == "occ") {
+          id(${DEVICE_ID}_occ).publish_state(id(${DEVICE_ID}_uart_text).state.substr(5).c_str());
+        }
+        else if (id(${DEVICE_ID}_uart_text).state.substr(0,3) == "mov") {
+          id(${DEVICE_ID}_mov).publish_state(id(${DEVICE_ID}_uart_text).state.substr(5).c_str());
+        }
 
-# Configuration of M5 Atom Lite onboard RGB LED    
-light:
-- platform: fastled_clockless
-  chipset: WS2812
-  pin: 27
-  num_leds: 1
-  rgb_order: grb
-  name: "FastLED Light"
-
-ota:
-  password: !secret ota_password
-
+bluetooth_proxy:
+  active: true
+esp32_ble_tracker:
