@@ -1,7 +1,7 @@
 substitutions:
-  LOCATION: "LocationName"
+  LOCATION: "mylocation"
+############################################
   DEVICE_NAME: "Radar ${LOCATION}"
-  DEVICE_ID: radar_${LOCATION}
   INPUT_PIN: "33"
   TX_PIN: "21"
   RX_PIN: "25"
@@ -9,26 +9,27 @@ substitutions:
 #############################################################################################################################
 # Typical configuration:
 # ======================
-# delay_det_time: 5
-# det_range: 50000 (long-range, higher value means detection at shorter range)
+# delay_det_time=5
 #
-# ind_max: 32 (no idea what this is)
-# ind_min: 2
+# ind_max=32
+# ind_min=2
 #
-### motion threshold - values below this are not reported back and don't cause trigger
-# mov_sensitivity: 1400 
-# mos_sn: 4
+# th1 is motion threshold, don't report value lower than
+# th1=800
+# mov_sn=3
 #
-### occupancy threshold - values below this are not reported back
-# occ_sensitivity: 250
-# occ_sn: 6
+# th1 is occupancy threshold, don't report value lower than
+# th2=410
+# occ_sn=5
+#
+# th3=50000 (long-range, higher value means detection at shorter range)
 #############################################################################################################################
 
 packages:
   esphome.bluetooth-proxy: github://esphome/bluetooth-proxies/m5stack-atom-lite.yaml@main
 
 esphome:
-  name: ${DEVICE_ID}
+  name: radar_${LOCATION}
   name_add_mac_suffix: false
   on_boot:    #LD1115H Initial Setting
     priority: -200
@@ -36,19 +37,19 @@ esphome:
       - uart.write:
           id: LD1115H_UART_BUS
           data: !lambda |-
-            std::string th1st = "th1=" + str_sprintf("%.0f",id(${DEVICE_ID}_th1_motion).state) +" \n";
+            std::string th1st = "th1=" + str_sprintf("%.0f",id(th1_motion).state) +" \n";
             return std::vector<uint8_t>(th1st.begin(), th1st.end());
       - delay: 250ms
       - uart.write:
           id: LD1115H_UART_BUS
           data: !lambda |-
-            std::string th2st = "th2=" + str_sprintf("%.0f",id(${DEVICE_ID}_th2_occupancy).state) +" \n";
+            std::string th2st = "th2=" + str_sprintf("%.0f",id(th2_occupancy).state) +" \n";
             return std::vector<uint8_t>(th2st.begin(), th2st.end());
       - delay: 250ms
       - uart.write:
           id: LD1115H_UART_BUS
           data: !lambda |-
-            std::string th3st = "th3=" + str_sprintf("%.0f",id(${DEVICE_ID}_th3_range).state) +" \n";
+            std::string th3st = "th3=" + str_sprintf("%.0f",id(th3_range).state) +" \n";
             return std::vector<uint8_t>(th3st.begin(), th3st.end());
 
 external_components:
@@ -61,11 +62,11 @@ wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
 
-# Configuration of M5 Atom Lite onboard RGB LED    
+# Configuration of M5 Atom Lite onboard RGB LED
 light:
 - platform: fastled_clockless
-  name: "${DEVICE_ID} FastLED Light"
-  id: ${DEVICE_ID}_fastled
+  name: "${DEVICE_NAME} FastLED Light"
+  id: fastled
   icon: "mdi:led-outline"
   chipset: WS2812
   pin: 27 # Fixed value for M5stack Atom Lite
@@ -80,8 +81,8 @@ logger:
 
 binary_sensor:
 - platform: gpio
-  name: "${DEVICE_ID} Occupancy"
-  id: ${DEVICE_ID}_occupancy
+  name: "${DEVICE_NAME} Occupancy"
+  id: occupancy
   device_class: occupancy
   icon: "mdi:radar"
   pin:
@@ -96,26 +97,19 @@ uart:
   rx_pin: ${RX_PIN}
   baud_rate: 115200
   setup_priority: 200 #Set Priority To Prevent Boot Loop or Fail
-#  debug:
-#    direction: BOTH
-#    dummy_receiver: true
-#    after:
-#      delimiter: "\n"
-#    sequence:
-#      - lambda: UARTDebug::log_string(direction, bytes);
 
 number:
 - platform: template
-  name: "${DEVICE_ID} th1 motion"
-  id: ${DEVICE_ID}_th1_motion
+  name: "${DEVICE_NAME} th1 motion"
+  id: th1_motion
   icon: "mdi:cogs"
   optimistic: true
   restore_value: true
   initial_value: 120
-  min_value: 20
-  max_value: 1200
+  min_value: 10
+  max_value: 65535
   step: 10
-  mode: slider
+  mode: box
   set_action:
     then:
       - uart.write:
@@ -128,16 +122,16 @@ number:
 
 
 - platform: template
-  name: "${DEVICE_ID} th2 occupancy"
-  id: ${DEVICE_ID}_th2_occupancy
+  name: "${DEVICE_NAME} th2 occupancy"
+  id: th2_occupancy
   icon: "mdi:cogs"
   optimistic: true
   restore_value: true    
   initial_value: 250
-  min_value: 50
-  max_value: 2500
-  step: 1
-  mode: slider
+  min_value: 10
+  max_value: 65535
+  step: 10
+  mode: box
   set_action:
     then:
       - uart.write:
@@ -149,8 +143,8 @@ number:
       - uart.write: "save\n"
 
 - platform: template
-  name: "${DEVICE_ID} th3 range"
-  id:   ${DEVICE_ID}_th3_range
+  name: "${DEVICE_NAME} th3 range"
+  id:   th3_range
   icon: "mdi:cogs"
   min_value: 0
   max_value: 65535
@@ -170,8 +164,8 @@ number:
       - uart.write: "save\n"
 
 - platform: template
-  name: "${DEVICE_ID} dtime"
-  id:   ${DEVICE_ID}_delay_det_time
+  name: "${DEVICE_NAME} dtime"
+  id:   delay_det_time
   icon: "mdi:timer-sand-empty"
   min_value: 1
   max_value: 60
@@ -189,8 +183,8 @@ number:
     - uart.write: "save\n"
 
 - platform: template
-  name: "${DEVICE_ID} mov_sn"
-  id:   ${DEVICE_ID}_mov_sn
+  name: "${DEVICE_NAME} mov_sn"
+  id:   mov_sn
   min_value: 0
   max_value: 255
   initial_value: 3
@@ -207,8 +201,8 @@ number:
     - uart.write: "save\n"
 
 - platform: template
-  name: "${DEVICE_ID} occ_sn"
-  id: ${DEVICE_ID}_occ_sn
+  name: "${DEVICE_NAME} occ_sn"
+  id: occ_sn
   min_value: 0
   max_value: 255
   initial_value: 5
@@ -225,8 +219,8 @@ number:
     - uart.write: "save\n"
 
 - platform: template
-  name: "${DEVICE_ID} ind_min"
-  id:   ${DEVICE_ID}_ind_min
+  name: "${DEVICE_NAME} ind_min"
+  id:   ind_min
   min_value: 0
   max_value: 32
   initial_value: 2
@@ -243,8 +237,8 @@ number:
     - uart.write: "save\n"
 
 - platform: template
-  name: "${DEVICE_ID} ind_max"
-  id:   ${DEVICE_ID}_ind_max
+  name: "${DEVICE_NAME} ind_max"
+  id:   ind_max
   min_value: 0
   max_value: 32
   initial_value: 32
@@ -262,28 +256,30 @@ number:
 
 text_sensor:
   - platform: template
-    name: "${DEVICE_ID} mov"
-    id: ${DEVICE_ID}_mov
+    name: "${DEVICE_NAME} mov"
+    id: mov
     icon: "mdi:format-text"
   - platform: template
-    name: "${DEVICE_ID} occ"
-    id: ${DEVICE_ID}_occ
+    name: "${DEVICE_NAME} occ"
+    id: occ
     icon: "mdi:format-text"
   - platform: serial
     uart_id: LD1115H_UART_BUS
-    name: "${DEVICE_ID} debug"
-    id:    ${DEVICE_ID}_uart_text
+    name: "${DEVICE_NAME} debug"
+    id:    uart_text
     icon: "mdi:format-text"
     internal: true #If Don't Want to See UART Receive Data, Set To True
     on_value:
       lambda: |-
-        if (id(${DEVICE_ID}_uart_text).state.substr(0,3) == "occ") {
-          id(${DEVICE_ID}_occ).publish_state(id(${DEVICE_ID}_uart_text).state.substr(5).c_str());
+        if (id(uart_text).state.substr(0,3) == "occ") {
+          id(occ).publish_state(id(uart_text).state.substr(5).c_str());
         }
-        else if (id(${DEVICE_ID}_uart_text).state.substr(0,3) == "mov") {
-          id(${DEVICE_ID}_mov).publish_state(id(${DEVICE_ID}_uart_text).state.substr(5).c_str());
+        else if (id(uart_text).state.substr(0,3) == "mov") {
+          id(mov).publish_state(id(uart_text).state.substr(5).c_str());
         }
 
 bluetooth_proxy:
   active: true
+
 esp32_ble_tracker:
+
