@@ -8,7 +8,7 @@ set number
 set nocompatible
 set modelines=0
 set relativenumber
-set visualbell
+set novisualbell
 set cursorline
 set hlsearch
 set incsearch
@@ -42,7 +42,7 @@ set statusline+=\ %{&fileencoding?&fileencoding:&encoding}
 set statusline+=\[%{&fileformat}\]
 set statusline+=\ %p%%
 set statusline+=\ %l:%c
-set statusline+=\ 
+set statusline+=\
 
 nnoremap / /\v
 vnoremap / /\v
@@ -54,7 +54,7 @@ vnoremap <F1> <ESC>
 inoremap jj <ESC>
 inoremap <PageUp> <Esc>
 
-"nnoremap ; :
+nnoremap ; :
 
 exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~"
 set list
@@ -71,8 +71,7 @@ if has("gui_running")
   set guioptions-=T
 endif
 
-
 autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 let g:indentLine_char = '¦'
 
-
+packloadall
