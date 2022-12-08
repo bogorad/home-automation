@@ -1,5 +1,5 @@
 substitutions:
-  LOCATION: "mylocation"
+  LOCATION: "workbench"
 ############################################
   DEVICE_NAME: "Radar ${LOCATION}"
   INPUT_PIN: "33"
@@ -18,7 +18,7 @@ substitutions:
 # th1=800
 # mov_sn=3
 #
-# th2 is occupancy threshold, don't report value lower than
+# th1 is occupancy threshold, don't report value lower than
 # th2=410
 # occ_sn=5
 #
@@ -63,16 +63,17 @@ wifi:
   password: !secret wifi_password
 
 # Configuration of M5 Atom Lite onboard RGB LED
-light:
-- platform: fastled_clockless
-  name: "${DEVICE_NAME} FastLED Light"
-  id: fastled
-  icon: "mdi:led-outline"
-  chipset: WS2812
-  pin: 27 # Fixed value for M5stack Atom Lite
-  num_leds: 1
-  rgb_order: grb
-
+#### commented out, incompatible with the new way BLE-proxy dies things
+#light:
+#- platform: fastled_clockless
+#  name: "${DEVICE_NAME} FastLED Light"
+#  id: fastled
+#  icon: "mdi:led-outline"
+#  chipset: WS2812
+#  pin: 27 # Fixed value for M5stack Atom Lite
+#  num_leds: 1
+#  rgb_order: grb
+#
 ota:
   password: !secret ota_password
 
@@ -282,4 +283,3 @@ bluetooth_proxy:
   active: true
 
 esp32_ble_tracker:
-
