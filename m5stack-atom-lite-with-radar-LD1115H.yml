@@ -1,5 +1,5 @@
 substitutions:
-  LOCATION: "workbench"
+  LOCATION: "replace_with_location_name"
 ############################################
   DEVICE_NAME: "Radar ${LOCATION}"
   INPUT_PIN: "33"
