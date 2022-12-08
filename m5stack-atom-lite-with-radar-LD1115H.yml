@@ -18,7 +18,7 @@ substitutions:
 # th1=800
 # mov_sn=3
 #
-# th1 is occupancy threshold, don't report value lower than
+# th2 is occupancy threshold, don't report value lower than
 # th2=410
 # occ_sn=5
 #
