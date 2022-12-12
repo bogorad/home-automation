@@ -42,7 +42,7 @@ set statusline+=\ %{&fileencoding?&fileencoding:&encoding}
 set statusline+=\[%{&fileformat}\]
 set statusline+=\ %p%%
 set statusline+=\ %l:%c
-set statusline+=\
+set statusline+=\ 
 
 nnoremap / /\v
 vnoremap / /\v
@@ -55,6 +55,19 @@ inoremap jj <ESC>
 inoremap <PageUp> <Esc>
 
 nnoremap ; :
+
+" Navigate by half-screen & scroll.
+nnoremap <C-d> <C-d>zz
+nnoremap <C-u> <C-u>zz
+
+" Splitting:
+set splitbelow
+set splitright
+nnoremap <C-J> <C-W><C-J>
+nnoremap <C-K> <C-W><C-K>
+nnoremap <C-L> <C-W><C-L>
+nnoremap <C-H> <C-W><C-H>
+
 
 exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~"
 set list
@@ -71,7 +84,8 @@ if has("gui_running")
   set guioptions-=T
 endif
 
+
 autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab
 let g:indentLine_char = '¦'
 
-packloadall
+
