@@ -1,0 +1,9 @@
+#
+
+cher  -fstype=rclone,config=/home/chuck/.config/rclone/rclone.conf,allow-other,allow-non-empty,max-read-ahead=5M :cher:
+
+video -fstype=cifs,rw,credentials=/home/chuck/.config/smbcredentials,file_mode=0777,dir_mode=0777 ://bruc-syn/video
+books -fstype=cifs,rw,credentials=/home/chuck/.config/smbcredentials,file_mode=0777,dir_mode=0777 ://bruc-syn/books
+backups -fstype=cifs,rw,credentials=/home/chuck/.config/smbcredentials,file_mode=0777,dir_mode=0777 ://bruc-syn/backups
+docker -fstype=cifs,rw,credentials=/home/chuck/.config/smbcredentials,file_mode=0777,dir_mode=0777 ://bruc-syn/docker
+warez -fstype=cifs,rw,credentials=/home/chuck/.config/smbcredentials,file_mode=0777,dir_mode=0777 ://bruc-syn/warez
