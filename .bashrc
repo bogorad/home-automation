@@ -96,7 +96,7 @@ alias sf='set|grep -i '
 alias myip='curl -i http://checkip.dyndns.org/'
 alias fullupgrade='sudo apt update && sudo apt full-upgrade --yes && sudo apt autoremove --yes --purge'
 alias svi='sudo -E vi '
-export DISPLAY='192.168.86.30:10'
+export DISPLAY='192.168.86.11:10'
 export EDITOR='vi'
 
 ### for PodMan
