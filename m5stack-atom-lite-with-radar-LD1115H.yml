@@ -2,6 +2,7 @@ substitutions:
   LOCATION: "replace_with_location_name"
 ############################################
   DEVICE_NAME: "Radar ${LOCATION}"
+  friendly_name: ${DEVICE_NAME}
   INPUT_PIN: "33"
   TX_PIN: "21"
   RX_PIN: "25"
