@@ -1,0 +1,294 @@
+{
+  "log": {
+    "loglevel": "debug",
+    "access": "/ssd/tmp/xray-access.log",
+    "error":  "/ssd/tmp/xray-error.log",
+    "dnsLog": true
+  },
+  "dns": {
+    "tag": "in-dns",
+    "queryStrategy": "UseIPv4",
+    "servers": [
+      // local via local (/etc/hosts)
+      { "address": "tcp+local://127.0.0.1:53",         "skipFallback": true,
+        "domains": [ "domain:bruc", "domain:local", "domain:lan"] },
+      // russia via yandex-dns
+      { "address": "77.88.8.8",                        "skipFallback": true,
+        "domains": [ "domain:ru", "eaglecdn.com" ] },
+      // streaming via out-wg-us-nj
+      { "address": "9.9.9.9",                          "skipFallback": true,
+        "domains": [ "ext:mysites.dat:netflix", "ext:mysites.dat:hulu", "ext:mysites.dat:spotify" ] },
+      // main resolvers
+      { "address": "https+local://1.0.0.1/dns-query" },
+      { "address": "https+local://dns.google/dns-query" },
+      { "address": "quic+local://dns.adguard.com" },
+      // fallback (fastest but unencrypted)
+      { "address": "1.0.0.1" }
+    ],
+    "hosts": {
+      "domain:bbbbbbbbbbbb.eu": "traefik.bruc"
+    }
+  },
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      //============== first deal with DNS
+      { "outboundTag": "out-dns", "port": "53,54", "type": "field" }, // catch all DNS requests, process via internal DNS server
+      { "outboundTag": "block",   "port": "853",   "type": "field" }, // block DoT by known port
+      { "outboundTag": "block",                    "type": "field",   // block DoH, known domains here
+        "domain": [
+          "dns.google",
+          "cloudflare-dns.com",
+          "dns.adguard.com",
+          "freedns.controld.com",
+          "regexp:dns.*\\.quad9\\.net",
+          "regexp:.*dns.*\\.yandex\\.(ru|net|com)"
+        ]
+      },                                              // done with DNS
+      { "outboundTag": "out-direct", "type": "field", // direct access - IP
+        "ip": [
+          "geoip:private",
+          "10.30.30.0/24",
+          "10.60.60.0/24",
+          "10.70.70.0/24"
+        ]
+      },
+      { "outboundTag": "out-traefik-web", "type": "field",  // local http  via Traefik
+        "port": 80,  "domain": [ "domain:bruc", "domain:bbbbbbbbbbb.eu" ]
+      },
+      { "outboundTag": "out-traefik-tls", "type": "field",  // local https via Traefik
+        "port": 443, "domain": [ "domain:bruc", "domain:bbbbbbbbbbb.eu" ]
+      },
+      { "outboundTag": "out-direct", "type": "field", // direct access - domains
+        "domain": [
+          // local & mine
+          "domain:lan", "domain:local",
+          "bbbbbbbbbbbbbbb.cat",
+          // direct - regional
+          "domian:es",
+          "domain:cat",
+          "domain:barcelona",
+          "domain:il",
+          // direct - google (for speed)
+          "regexp:(gstatic|ytimg|googlevideo).com",
+          "regexp:(mail|maps|mtalk|talk|chat|play|duo|meet|photo|drive|clients\\d+)\\.google\\.com",
+          // misc
+          "twimg.com",
+          "domain:web3auth.io",
+          "domain:tor.us",
+          "vueling.com",
+          "amazon.es",
+          "newsblur.com",
+          "expedia.com",
+          "binance.com",
+          "lastpass.com",
+          "hiddencoffeeroasters.com",
+          "slack.com",
+          "slackb.com",
+          "slack-edge.com",
+          "slack-imgs.com",
+          "whatsapp.com",
+          "evernote.com",
+          "ihg.com",
+          "thelocal.com",
+          "ikea.com",
+          "pepephone.com",
+          "indigitall.com",
+          "callwithus",
+          "proticketing",
+          "zadarma.com",
+          "telegram.org",
+          "openlogin.com",
+          "exler",
+//          "fast.com",
+          "ynetnews.com",
+          "grover.com",
+          "githubusercontent.com",
+          "github.com",
+          "regexp:archive\\.(is|ph|today)",
+          "cdninstagram.com",
+          "fbcdn.net",
+          "alicdn.com",
+          "imgur.com",
+          "renfe.com"
+        ]
+      },
+      { "outboundTag": "out-wg-ru-12345",           "type": "field", // explicit unblock via troff
+        "domain": [
+          "some-very-specific-russian-website.ru"
+          ]
+      },
+      { "outboundTag": "out-wg-us-nj",              "type": "field", // explicit unblock via US-NJ
+        "domain": [
+          "ext:mysites.dat:oisd-excludes"
+          ]
+      },
+      { "outboundTag": "block",                     "type": "field", // domain blocklists etc
+        "domain": [
+          // external blocklists
+          "ext:mysites.dat:oisd-small-regex",
+          "ext:mysites.dat:ru-ads",
+          "geosites:google-ads",
+          // specific domains
+          "ext:mysites.dat:tiktok",
+          "ext:mysites.dat:snap",
+          "smi2.ru",
+          "trafficjunky.com",
+          "regexp:counter.*\\.ru"
+        ]
+      },
+      // per-user rules
+      { "outboundTag": "block", "user": "pixel1@rtr.bruc", "type": "field",
+        "domain": [ // block instagram for pixel1
+          "ext:mysites.dat:instagram"
+        ]
+      },
+      // source routing
+      { "outboundTag": "out-wg-us-nj",    "inboundTag": [ "in-socks-us-nj"  ], "type": "field" },
+      { "outboundTag": "out-wg-ru-12345", "inboundTag": [ "in-socks-ru-msk" ], "type": "field" },
+      { "outboundTag": "out-wg-us-ny",    "inboundTag": [ "in-socks-us-ny"  ], "type": "field" },
+      { "outboundTag": "out-direct",      "inboundTag": [ "in-socks-direct" ], "type": "field" },
+      // steaming
+      { "outboundTag": "out-wg-us-nj", "type": "field",
+        "ip": [ "ext:mygeo.dat:netflix", "ext:mygeo.dat:hulu", "9.9.9.9" ]
+      },
+      // russia
+      { "outboundTag": "out-wg-ru-12345", "domain": [ "domain:ru"],              "type": "field" },
+      { "outboundTag": "out-wg-ru-12345", "ip":     [ "geoip:ru", "77.88.8.8" ], "type": "field" },
+      // default => US/NYC-2
+      { "outboundTag": "out-wg-us-nj",    "ip":     [ "0.0.0.0/0" ],             "type": "field" }
+    ]
+  },
+  "inbounds": [
+    { "tag": "in-vless-vision", "protocol": "vless",
+      "listen": "0.0.0.0", "port": 8443,
+      "settings": {
+        "clients": [
+          { "email": "flip@rtr.bruc",   "id": "***********************",
+            "flow": "xtls-rprx-vision"
+          },
+          { "email": "pixel4a@rtr.bruc","id": "***********************",
+            "flow": "xtls-rprx-vision"
+          },
+          { "email": "lenovo@rtr.bruc", "id": "***********************",
+            "flow": "xtls-rprx-vision"
+          },
+          { "email": "pixel1@rtr.bruc",  "id": "***********************",
+            "flow": "xtls-rprx-vision"
+          },
+          { "email": "vaio@rtr.bruc",    "id": "***********************",
+            "flow": "xtls-rprx-vision"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "alpn": [
+            "http/1.1",
+            "h2"
+          ],
+          "certificates": [
+            {
+              "certificateFile": "/etc/xray/tls_cert.pem",
+              "keyFile": "/etc/xray/tls_key.pem"
+            }
+          ]
+        }
+      },
+      "sniffing": { "enabled": true, "destOverride": [ "http", "tls", "quic" ] }
+    },
+    { "tag": "in-socks-unified", "protocol": "socks",
+      "listen": "192.168.11.1", "port": 1080,
+      "settings": { "udp": true },
+      "sniffing": { "enabled": true, "destOverride": [ "http", "tls", "quic" ] }
+    },
+    { "tag": "in-socks-us-nj", "protocol": "socks",
+      "listen": "192.168.11.1", "port": 10801,
+      "settings": { "udp": true }
+    },
+    { "tag": "in-socks-ru-msk", "protocol": "socks",
+      "listen": "192.168.11.1", "port": 10802,
+      "settings": { "udp": true }
+    },
+    { "tag": "in-socks-us-ny", "protocol": "socks",
+      "listen": "192.168.11.1", "port": 10803,
+      "settings": { "udp": true }
+    },
+    { "tag": "in-socks-direct", "protocol": "socks",
+      "listen": "192.168.11.1", "port": 1090,
+      "settings": { "udp": true }
+    }
+    ,
+    { "tag": "in-doko", "protocol": "dokodemo-door",
+      "listen": "0.0.0.0", "port": 10901,
+      "settings": { "network": "tcp,udp", "followRedirect": true },
+      "sniffing": { "enabled": true, "destOverride": [ "http", "tls", "quic" ] },
+      "streamSettings": { "sockopt": { "tproxy": "tproxy", "mark": 255 } }
+    }
+  ],
+  "outbounds": [
+    { "tag": "block",           "protocol": "blackhole",
+      "settings":             { "response": { "type": "http" } }
+    },
+    { "tag": "out-dns",         "protocol": "dns",
+      "streamSettings":       { "sockopt": { "mark": 255 } }
+    },
+    { "tag": "out-direct",      "protocol": "freedom",
+      "streamSettings":       { "sockopt": { "mark": 255 } }
+    },
+    { "tag": "out-traefik-web", "protocol": "freedom",
+      "settings":             { "redirect": "traefik.bruc:80"},
+      "streamSettings":       { "sockopt": { "mark": 255 } }
+    },
+    { "tag": "out-traefik-tls", "protocol": "freedom",
+      "settings":             { "redirect": "traefik.bruc:443"},
+      "streamSettings":       { "sockopt": { "mark": 255 } }
+    },
+    { "tag": "out-wg-us-nj",    "protocol": "freedom",
+      "streamSettings":       { "sockopt": { "mark": 327680 } }
+    },
+#    { "tag": "out-wg-us-nj",  "protocol": "wireguard",
+#      "settings": {
+#        "secretKey": "**********************************",
+#        "address": [ "10.10.10.10/32" ],
+#        "peers": [
+#          { "publicKey": "**********************",
+#            "endpoint": "1.1.1.1:1443", "allowedIPs": [ "0.0.0.0/0" ]
+#          }
+#        ],
+#        "mtu": 1390,
+#        "workers": 2
+#      }, "streamSettings": { "sockopt": { "mark": 255 } }
+#    },
+    { "tag": "out-wg-us-ny",  "protocol": "wireguard",
+      "settings": {
+        "secretKey": "*************************",
+        "address": [ "10.10.10.10/32" ],
+        "peers": [
+          { "publicKey": "********************",
+            "endpoint": "1.1.1.1:1443", "allowedIPs": [ "0.0.0.0/0" ]
+          }
+        ],
+        "mtu": 1390,
+        "workers": 2
+      }, "streamSettings": { "sockopt": { "mark": 255 } }
+    },
+    { "tag": "out-wg-ru-12345",  "protocol": "wireguard",
+      "settings": {
+        "secretKey": "*************************",
+        "address": [ "10.0.0.7/32" ],
+        "peers": [
+          { "publicKey": "************************",
+            "preSharedKey": "*************************",
+            "endpoint": "1.1.1.1:51820", "allowedIPs": [ "0.0.0.0/0" ]
+          }
+        ],
+        "mtu": 1200,
+        "workers": 2
+      }, "streamSettings": { "sockopt": { "mark": 255 } }
+    }
+  ]
+}
