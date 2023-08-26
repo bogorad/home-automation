@@ -42,5 +42,7 @@ mv dlc.dat ~/git/home-automation/mysites.dat
 
 cd ~/git/home-automation
 scp mysites.dat mygeo.dat root@r5s.bruc:/usr/share/xray/
+git add mysites.dat
+git add mygeo.dat
 git commit -m "upd"
 git push
