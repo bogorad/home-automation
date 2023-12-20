@@ -1,7 +1,7 @@
 alias ll='ls -alhF'
 alias la='ls -AhF'
 alias l='ls -CF'
-alias less='less -Si#20 '
+alias less='less -nSi#20 '
 alias les='less -i#20 '
 alias hf='history|grep -i '
 alias sf='set|grep -i '
