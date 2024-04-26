@@ -84,14 +84,6 @@ enum custom_keycodes
     MY_DOT,
     MY_QUESTION,
     MY_SLASH,
-    QKA,    // QWERTY HRM mitigation
-    QKS,
-    QKD,
-    QKF,
-    QKJ,
-    QKK,
-    QKL,
-    QKSMCLN,
 };
 
 // keymap
