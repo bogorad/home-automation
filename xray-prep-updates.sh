@@ -37,7 +37,8 @@ cd ~/git/domain-list-community
 git pull
 
 # get OISD.nl (small, regex)
-curl https://small.oisd.nl/regex|sed 's|^/|regexp:|;s|/$||' > ./data/oisd-small-regex
+#curl https://small.oisd.nl/regex|sed 's|^/|regexp:|;s|/$||' > ./data/oisd-small-regex
+curl "https://small.oisd.nl/"|sed 's|^/|regexp:|;s|/$||' > ./data/oisd-small-regex
 
 # excludes come from here - !!!but need HEAVY cleaup!!!
 ###curl https://oisd.nl/excludes.php | ./pup 'a text{}' > ./data/oisd-excludes
