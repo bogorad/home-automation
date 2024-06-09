@@ -9,20 +9,20 @@ api:
 #############################################################################################################################
 # Typical configuration:
 # ======================
-# delay_det_time=5
+# delay_det_time=60
 #
 # ind_max=32
-# ind_min=2
+# ind_min=3
 #
 # th1 is motion threshold, don't report value lower than
-# th1=120
-# mov_sn=3
+# th1=1200
+# mov_sn=1
 #
 # th1 is occupancy threshold, don't report value lower than
-# th2=250
-# occ_sn=5
+# th2=110
+# occ_sn=1
 #
-# th3=65000 (long-range, lower value means detection at shorter range)
+# th3=50000 (long-range, higher value means detection at shorter range)
 #############################################################################################################################
 
 packages:
@@ -93,6 +93,11 @@ binary_sensor:
         input: true
         pullup: false
 
+  - platform: template
+    name: "Motion"
+    id: m5stack_motion
+    icon: "mdi:motion-sensor"
+
   - platform: gpio
     name: "Button"
     id: m5stack_button
@@ -101,33 +106,11 @@ binary_sensor:
       inverted: true
 
   - platform: ble_presence
-    ibeacon_uuid: 'a9c5ced0-xxxx-xxxx-xxxx-xxxxxxxxxxx'
-    name: "my-ibeacon"
+    ibeacon_uuid: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    name: "myphone-ibeacon"
     id: m5stack_presence
-
-  - platform: xiaomi_wx08zm
-    mac_address: "00:00:00:c2:3f:a9"
-    name: "Mosquito Power Office"
-    tablet:
-      name: "Mosquito Tablet Office"
-    battery_level:
-      name: "Mosquito Battery Office"
-
-  - platform: xiaomi_wx08zm
-    mac_address: "00:00:00:c1:4e:de"
-    name: "Mosquito Power Kids"
-    tablet:
-      name: "Mosquito Tablet Kids"
-    battery_level:
-      name: "Mosquito Battery Kids"
-
-  - platform: xiaomi_wx08zm
-    mac_address: "00:00:00:c3:91:79"
-    name: "Mosquito Power Guest"
-    tablet:
-      name: "Mosquito Tablet Guest"
-    battery_level:
-      name: "Mosquito Battery Guest"
+    device_class: presence
+    icon: "mdi:cellphone-basic"
 
 uart:
   id: LD1115H_UART_BUS
@@ -308,11 +291,15 @@ text_sensor:
     internal: true #If Don't Want to See UART Receive Data, Set To True
     on_value:
       lambda: |-
-        if (id(uart_text).state.substr(0,3) == "occ") {
+        if ((id(uart_text).state.substr(0,3) == "occ") and id(m5stack_debug_switch).state) {
           id(occ).publish_state(id(uart_text).state.substr(5).c_str());
         }
         else if (id(uart_text).state.substr(0,3) == "mov") {
-          id(mov).publish_state(id(uart_text).state.substr(5).c_str());
+          id(m5stack_motion).state = true;
+          id(m5stack_motion).publish_state(true);
+          if (id(m5stack_debug_switch).state) {
+            id(mov).publish_state(id(uart_text).state.substr(5).c_str());
+          }
         }
 
 bluetooth_proxy:
@@ -327,4 +314,25 @@ esp32_improv:
 switch:
   - platform: factory_reset
     name: Restart with Factory Default Settings
+    entity_category: "diagnostic"
+
+  - platform: template
+    name: Enable DEBUG
+    id: m5stack_debug_switch
+    optimistic: True
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+
+interval:
+  - interval: 5s #Clearance Scan Time
+    setup_priority: -200
+    then:
+      lambda: |-
+        if (id(m5stack_motion).state) {
+            id(m5stack_motion).state = false;
+            id(m5stack_motion).publish_state(false);
+        }
 

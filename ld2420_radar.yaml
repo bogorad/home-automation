@@ -1,0 +1,164 @@
+uart:
+  id: LD2420_UART_BUS
+  tx_pin: 19 # ${TX_PIN}
+  rx_pin: 22 # ${RX_PIN}
+  baud_rate: 115200
+
+external_components:
+   source: github://pr#4847
+   components: [ ld2420 ]
+   refresh: 0s
+
+ld2420:
+
+text_sensor:
+  - platform: ld2420
+    fw_version:
+      name: LD2420 Firmware
+      id: ${name}_ld2420_firmware
+
+sensor:
+  - platform: ld2420
+    moving_distance:
+      name : ld2420 Moving Distance
+      id: ${name}_moving_distance
+
+binary_sensor:
+  - platform: ld2420
+    has_target:
+      name: "Presence"
+      id: ${name}_ld2420_presence
+      icon: mdi:radar
+#######################################################
+select:
+  - platform: ld2420
+    operating_mode:
+      name: "Operating Mode"
+      id: ${name}_operating_mode
+
+number:
+  - platform: ld2420
+    presence_timeout:
+      name: "Detection Presence Timeout"
+      id: ${name}_box
+    min_gate_distance:
+      name: "Detection Gate Minimum"
+      id: ${name}_detection_gate_minimum
+    max_gate_distance:
+      name: "Detection Gate Maximum"
+      id: ${name}_detection_gate_maximum
+    # See "Number" section below for detail
+
+    gate_select:
+      name: "Select Gate to Set"
+      id: ${name}_select_gate_to_set
+    still_threshold:
+      name: "Set Still Threshold Value"
+      id: ${name}_set_still_threshold_value
+    move_threshold:
+      name: "Set Move Threshold Value"
+      id: ${name}_set_move_threshold_value
+
+    gate_move_sensitivity:
+      name: "Move Calibration Sensitivity Factor"
+      id: ${name}_move_calibration_sensitivity_factor
+    gate_still_sensitivity:
+      name: "Still Calibration Sensitivity Factor"
+      id: ${name}_still_calibration_sensitivity_factor
+
+    gate_0:
+      move_threshold:
+        name: "Gate 0 Move Threshold"
+      still_threshold:
+        name: "Gate 0 Still Threshold"
+    gate_1:
+      move_threshold:
+        name: "Gate 1 Move Threshold"
+      still_threshold:
+        name: "Gate 1 Still Threshold"
+    gate_2:
+      move_threshold:
+        name: "Gate 2 Move Threshold"
+      still_threshold:
+        name: "Gate 2 Still Threshold"
+    gate_3:
+      move_threshold:
+        name: "Gate 3 Move Threshold"
+      still_threshold:
+        name: "Gate 3 Still Threshold"
+    gate_4:
+      move_threshold:
+        name: "Gate 4 Move Threshold"
+      still_threshold:
+        name: "Gate 4 Still Threshold"
+    gate_5:
+      move_threshold:
+        name: "Gate 5 Move Threshold"
+      still_threshold:
+        name: "Gate 5 Still Threshold"
+    gate_6:
+      move_threshold:
+        name: "Gate 6 Move Threshold"
+      still_threshold:
+        name: "Gate 6 Still Threshold"
+    gate_7:
+      move_threshold:
+        name: "Gate 7 Move Threshold"
+      still_threshold:
+        name: "Gate 7 Still Threshold"
+    gate_8:
+      move_threshold:
+        name: "Gate 8 Move Threshold"
+      still_threshold:
+        name: "Gate 8 Still Threshold"
+    gate_9:
+      move_threshold:
+        name: "Gate 9 Move Threshold"
+      still_threshold:
+        name: "Gate 9 Still Threshold"
+    gate_10:
+      move_threshold:
+        name: "Gate 10 Move Threshold"
+      still_threshold:
+        name: "Gate 10 Still Threshold"
+    gate_11:
+      move_threshold:
+        name: "Gate 11 Move Threshold"
+      still_threshold:
+        name: "Gate 11 Still Threshold"
+    gate_12:
+      move_threshold:
+        name: "Gate 12 Move Threshold"
+      still_threshold:
+        name: "Gate 12 Still Threshold"
+    gate_13:
+      move_threshold:
+        name: "Gate 13 Move Threshold"
+      still_threshold:
+        name: "Gate 13 Still Threshold"
+    gate_14:
+      move_threshold:
+        name: "Gate 14 Move Threshold"
+      still_threshold:
+        name: "Gate 14 Still Threshold"
+    gate_15:
+      move_threshold:
+        name: "Gate 15 Move Threshold"
+      still_threshold:
+        name: "Gate 15 Still Threshold"
+
+button:
+  - platform: ld2420
+    apply_config:
+      name: "Apply Config"
+      id: ${name}_apply_config
+    factory_reset:
+      name: "Factory Reset"
+      id: ${name}_factory_reset
+    restart_module:
+      name: "Restart Module"
+      id: ${name}_restart_module
+    revert_config:
+      name: "Undo Edits"
+      id: ${name}_undo_edits
+
