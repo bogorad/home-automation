@@ -10,6 +10,7 @@ for util in "${required[@]}"; do
   fi
 done
 
+echo "Pulling geoip"
 cd ~/git/geoip/
 git pull
 
@@ -31,6 +32,7 @@ go run ./
 # move
 mv output/dat/mygeo.dat ~/git/home-automation/
 
+echo "Pulling domains"
 cd ~/git/domain-list-community
 git pull
 
@@ -46,6 +48,7 @@ go run ./
 #move
 mv dlc.dat ~/git/home-automation/mysites.dat
 
+echo "Pushinig cript" 
 cd ~/git/home-automation
 scp mysites.dat mygeo.dat root@r5s.bruc:/usr/share/xray/
 git add mysites.dat
