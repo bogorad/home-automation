@@ -10,8 +10,8 @@ for util in "${required[@]}"; do
   fi
 done
 
-echo "Pulling geoip"
 cd ~/git/geoip/
+echo "Pulling geoip"
 git pull
 
 # get netflix
@@ -27,9 +27,11 @@ curl "https://api.bgpview.io/asn/23286/prefixes" | jq ".data.ipv4_prefixes[].pre
 #curl "https://api.bgpview.io/asn/43515/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>>youtube.txt
 
 # complie to output/dat/mygeo.dat
+echo "Compiling..."
 go run ./
 
 # move
+echo "Moving..."
 mv output/dat/mygeo.dat ~/git/home-automation/
 
 echo "Pulling domains"
@@ -44,12 +46,14 @@ curl "https://small.oisd.nl/"|awk '/^\|\|/ {sub(/^\|\|/, ""); sub(/\^$/, ""); pr
 ###curl https://oisd.nl/excludes.php | ./pup 'a text{}' > ./data/oisd-excludes
 
 # compile to dlc.dat
+echo "Compiling..."
 go run ./
 
 #move
+echo "Moving..."
 mv dlc.dat ~/git/home-automation/mysites.dat
 
-echo "Pushinig cript" 
+echo "Pushinig cript"
 cd ~/git/home-automation
 scp mysites.dat mygeo.dat root@r5s.bruc:/usr/share/xray/
 git add mysites.dat
