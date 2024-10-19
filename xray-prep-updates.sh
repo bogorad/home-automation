@@ -14,11 +14,11 @@ cd ~/git/geoip/
 echo "Pulling geoip"
 git pull
 
-rm -rf ../tmp
 mkdir -p ../tmp/
+rm -rf ../tmp/*
 cp -r . ../tmp/
-
 cd ../tmp
+
 cp ../home-automation/saved-geoip-config.json config.json
 
 # get netflix
