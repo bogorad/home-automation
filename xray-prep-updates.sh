@@ -16,20 +16,20 @@ git pull
 
 mkdir -p ../tmp/
 rm -rf ../tmp/*
-cp -r . ../tmp/
+cp -r * ../tmp/
 cd ../tmp
 
 cp ../home-automation/saved-geoip-config.json config.json
 
 # get netflix
-curl "https://api.bgpview.io/asn/2906/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./netflix.txt
+curl --silent "https://api.bgpview.io/asn/2906/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./netflix.txt
 
 # get hulu
-curl "https://api.bgpview.io/asn/23286/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./hulu.txt
+curl --silent "https://api.bgpview.io/asn/23286/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./hulu.txt
 
 # get youtube
-curl "https://api.bgpview.io/asn/36040/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./youtube.txt
-curl "https://api.bgpview.io/asn/43515/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>>./youtube.txt
+curl --silent "https://api.bgpview.io/asn/36040/prefixes" >./youtube.txt
+curl --silent "https://api.bgpview.io/asn/43515/prefixes" >>./youtube.txt
 
 go run ./
 
