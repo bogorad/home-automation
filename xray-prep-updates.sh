@@ -61,5 +61,6 @@ scp mysites.dat mygeo.dat root@r5s.bruc:/usr/share/xray/
 git add mysites.dat
 git add mygeo.dat
 git add xray-prep-updates.sh
+git add saved-geoip-config.json
 git commit -m "upd"
 git push
