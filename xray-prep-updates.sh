@@ -23,13 +23,19 @@ cp ../home-automation/saved-geoip-config.json config.json
 
 # get netflix
 curl --silent "https://api.bgpview.io/asn/2906/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./netflix.txt
+sleep 1
 
 # get hulu
 curl --silent "https://api.bgpview.io/asn/23286/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./hulu.txt
+sleep 1
 
 # get youtube
-curl --silent "https://api.bgpview.io/asn/36040/prefixes" >./youtube.txt
-curl --silent "https://api.bgpview.io/asn/43515/prefixes" >>./youtube.txt
+curl --silent "https://api.bgpview.io/asn/36040/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./youtube.txt
+sleep 1
+curl --silent "https://api.bgpview.io/asn/43515/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>>./youtube.txt
+cat ./youtube.txt | sort
+
+sleep 10
 
 go run ./
 
