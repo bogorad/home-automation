@@ -32,10 +32,14 @@ sleep 1
 # get youtube
 curl --silent "https://api.bgpview.io/asn/36040/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./youtube.txt
 sleep 1
+
 curl --silent "https://api.bgpview.io/asn/43515/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>>./youtube.txt
+sleep 1
+
 cat ./youtube.txt | sort
 
-sleep 10
+# get tiktok
+curl --silent "https://api.bgpview.io/asn/138699/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./tiktok.txt 
 
 go run ./
 
