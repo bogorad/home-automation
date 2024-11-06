@@ -19,7 +19,7 @@ rm -rf ../tmp/*
 cp -r * ../tmp/
 cd ../tmp
 
-cp ../home-automation/saved-geoip-config.json config.json
+cp ../home-automation/geoip-config.json config.json
 
 # get netflix
 curl --silent "https://api.bgpview.io/asn/2906/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./netflix.txt
@@ -35,8 +35,6 @@ sleep 1
 
 curl --silent "https://api.bgpview.io/asn/43515/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>>./youtube.txt
 sleep 1
-
-cat ./youtube.txt | sort
 
 # get tiktok
 curl --silent "https://api.bgpview.io/asn/138699/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./tiktok.txt 
@@ -71,6 +69,6 @@ scp mysites.dat mygeo.dat root@r5s.bruc:/usr/share/xray/
 git add mysites.dat
 git add mygeo.dat
 git add xray-prep-updates.sh
-git add saved-geoip-config.json
+git add geoip-config.json
 git commit -m "upd"
 git push

@@ -4,6 +4,15 @@
       "type": "text",
       "action": "add",
       "args": {
+        "name": "tiktok",
+        "uri": "./tiktok.txt",
+        "onlyIPType": "ipv4"
+      }
+    },
+    {
+      "type": "text",
+      "action": "add",
+      "args": {
         "name": "youtube",
         "uri": "./youtube.txt",
         "onlyIPType": "ipv4"
