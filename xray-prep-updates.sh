@@ -39,6 +39,11 @@ sleep 1
 # get tiktok
 curl --silent "https://api.bgpview.io/asn/138699/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./tiktok.txt 
 
+# get tiktok
+curl --silent "https://api.bgpview.io/asn/205782/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./tubi.txt 
+curl --silent "https://api.bgpview.io/asn/207263/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>>./tubi.txt 
+curl --silent "https://api.bgpview.io/asn/215977/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>>./tubi.txt 
+
 go run ./
 
 # move
