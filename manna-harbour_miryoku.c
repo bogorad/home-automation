@@ -135,28 +135,26 @@ void process_layer_tap(uint16_t keycode, uint16_t layer, keyrecord_t *record)
 
 const key_override_t capsword_key_override = ko_make_basic(MOD_MASK_SHIFT, CW_TOGG, KC_CAPS);
 
-const key_override_t **key_overrides = (const key_override_t *[])
-{
-    &capsword_key_override,
-        NULL
+const key_override_t *key_overrides[] = {
+    &capsword_key_override
 };
 
 
 ///////////////////////////////////////////////////////////////////////////
 // 4
-const uint16_t PROGMEM combo_caps_word[]  = {KC_B,    KC_J,    COMBO_END};
+const uint16_t PROGMEM combo_caps_word[]  = {KC_P,    KC_L,    COMBO_END};
 const uint16_t PROGMEM switch_to_rus[]    = {KC_D,    KC_H,    COMBO_END};
 const uint16_t PROGMEM just_meta[]        = {LGUI_T(KC_A), LGUI_T(KC_O), COMBO_END};
 const uint16_t PROGMEM buttons_oneshot[]  = {KC_Z,    KC_SLSH, COMBO_END};
-// enter/undo/cut/copy/paste 5
+// enter/shift_enter/tab/copy/paste 5
 const uint16_t PROGMEM my_enter[]         = {KC_U,    KC_Y,    COMBO_END};
-const uint16_t PROGMEM my_undo[]          = {KC_Z,    KC_X,    COMBO_END};
-const uint16_t PROGMEM my_cut[]           = {KC_X,    KC_C,    COMBO_END};
-const uint16_t PROGMEM my_copy[]          = {KC_C,    KC_D,    COMBO_END};
-const uint16_t PROGMEM my_paste[]         = {KC_D,    KC_V,    COMBO_END};
+const uint16_t PROGMEM my_s_enter[]       = {KC_L,    KC_U,    COMBO_END};
+const uint16_t PROGMEM my_tab[]           = {KC_F,    KC_P,    COMBO_END};
+const uint16_t PROGMEM my_copy[]          = {KC_Z,    KC_Y,    COMBO_END}; // unused
+const uint16_t PROGMEM my_paste[]         = {KC_C,    KC_D,    COMBO_END};
 // vim 2
 const uint16_t PROGMEM vim_save[]         = {KC_W,    KC_F,    COMBO_END};
-const uint16_t PROGMEM vim_cmd[]          = {KC_F,    KC_P,    COMBO_END};
+const uint16_t PROGMEM vim_cmd[]          = {KC_Z,    KC_Y,    COMBO_END}; // unused
 // ,.? 3
 const uint16_t PROGMEM my_comma[]         = {KC_H,    KC_COMM, COMBO_END};
 const uint16_t PROGMEM my_dot[]           = {KC_COMM, KC_DOT,  COMBO_END};
@@ -171,13 +169,15 @@ combo_t key_combos[COMBO_COUNT] =
     COMBO(buttons_oneshot,  OSL(U_BUTTON)),
     //
     COMBO(my_enter,         KC_ENTER),
-    COMBO(my_undo,          C(KC_Z)),
-    COMBO(my_cut,           C(KC_X)),
-    COMBO(my_copy,          U_CPY),
+    COMBO(my_s_enter,       S(KC_ENTER)),
+    COMBO(my_tab,           KC_TAB),
+    // COMBO(my_undo,          C(KC_Z)),
+    // COMBO(my_cut,           C(KC_X)),
+    COMBO(my_copy,          U_CPY), // redefine
     COMBO(my_paste,         S(KC_INS)),
     //
     COMBO(vim_save,         VIM_SAVE),
-    COMBO(vim_cmd,          VIM_CMD),
+    COMBO(vim_cmd,          VIM_CMD), // redefine
     //
     COMBO(my_comma,         MY_COMMA),
     COMBO(my_dot,           MY_DOT),
@@ -203,7 +203,7 @@ void switch_to_english(void)
     set_mods(mod_state);
 };
 
-#define RUS_LAYER_TIMEOUT 5000  // timeout in milliseconds
+#define RUS_LAYER_TIMEOUT 3000  // timeout in milliseconds
 
 void switch_to_russian(void)
 {
@@ -296,7 +296,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
 
     // achordion
     if (!process_achordion(keycode, record)) { return false; }
-    //
+
     // Check if the current layer is U_EXTRA
     // and key is pressed
     // and HRMs are active
@@ -306,7 +306,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
                           MOD_BIT(KC_LCTL) |
                           MOD_BIT(KC_LGUI))))
     {
-        // and a key is pressed, ignore if released
         {
             dprintf("HRMs active, switching to U_BASE\n");
             layer_move(U_BASE);
@@ -318,7 +317,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
     if (!record->event.pressed &&
             need_to_restore_layer)
     {
-        dprintf("Restoring Cyrillic\n");
+        dprintf("Restoring U_EXTRA\n");
         layer_move(U_EXTRA);
         need_to_restore_layer = false;
         return true; // Continue normal tab processing

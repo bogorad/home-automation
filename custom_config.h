@@ -4,12 +4,12 @@
 KC_Q,              KC_W,              KC_F,              KC_P,              KC_B,              KC_J,              KC_L,              KC_U,              KC_Y,              KC_QUOT,           \
 LGUI_T(KC_A),      LALT_T(KC_R),      LCTL_T(KC_S),      LSFT_T(KC_T),      KC_G,              KC_M,              LSFT_T(KC_N),      LCTL_T(KC_E),      LALT_T(KC_I),      LGUI_T(KC_O),      \
 KC_Z,              KC_X,              KC_C,              KC_D,              KC_V,              KC_K,              KC_H,              KC_COMM,           KC_DOT,            KC_SLSH,           \
-U_NP,              U_NP,              LT(U_MEDIA,KC_ESC),LT(U_NAV,KC_SPC),  LT(U_MOUSE,KC_TAB),LT(U_SYM,KC_ENT),  LT(U_NUM,KC_BSPC), LT(U_FUN,KC_DEL),  U_NP,              U_NP
+U_NP,              U_NP,              LT(U_MEDIA,KC_ESC),LT(U_NAV,KC_SPC),  LT(U_MOUSE,KC_TAB),LT(U_SYM,U_NA),    LT(U_NUM,KC_BSPC), LT(U_FUN,KC_DEL),  U_NP,              U_NP
 
 #define MIRYOKU_LAYER_NAV \
 TD(U_TD_BOOT),     U_NA,              TD(U_TD_U_EXTRA),  TD(U_TD_U_BASE),   KC_LCBR,           KC_RCBR,           KC_HOME,           KC_UP,             KC_END,            KC_PGUP,           \
 KC_LGUI,           KC_LALT,           KC_LCTL,           KC_LSFT,           KC_LBRC,           KC_RBRC,           KC_LEFT,           KC_DOWN,           KC_RIGHT,          KC_PGDN,           \
-DB_TOGG,           U_NA,              KC_LEFT,           KC_RIGHT,          KC_CIRCUMFLEX,     KC_DLR,            KC_F23,            KC_F24,            A(KC_F24),         C(KC_F24),         \
+DB_TOGG,           U_NA,              KC_LEFT,           KC_RIGHT,          KC_CIRCUMFLEX,     KC_DLR,            KC_F23,            C(KC_F23),         A(KC_F23),         G(KC_F23),         \
 U_NP,              U_NP,              U_NA,              U_NA,              U_NA,              U_NA,              KC_DEL,            KC_INS,            U_NP,              U_NP
 
 #define MIRYOKU_LAYER_MOUSE \
@@ -31,22 +31,22 @@ KC_BACKSLASH,      KC_GRAVE,          KC_QUOT,           KC_SEMICOLON,      KC_S
 U_NP,              U_NP,              KC_LPRN,           KC_RPRN,           KC_UNDERSCORE,     U_NA,              U_NA,              U_NA,              U_NP,              U_NP
 
 #define MIRYOKU_LAYER_MEDIA \
-TD(U_TD_BOOT),     U_NA,              TD(U_TD_U_EXTRA),  TD(U_TD_U_BASE),   U_NA,              U_NA,              KC_LBRC,           KC_TILDE,          KC_QUOT,           U_NA,              \
+TD(U_TD_BOOT),     U_NA,              TD(U_TD_U_EXTRA),  TD(U_TD_U_BASE),   U_NA,              U_NA,              KC_LBRC,           KC_GRAVE,          KC_QUOT,           U_NA,              \
 KC_LGUI,           KC_LALT,           KC_LCTL,           KC_LSFT,           U_NA,              U_NU,              KC_MPRV,           U_NA,              KC_MNXT,           U_NA,              \
-U_NA,              KC_ALGR,           TD(U_TD_U_FUN),    TD(U_TD_U_MEDIA),  U_NA,              OU_AUTO,           KC_RBRC,           KC_LBRC,           KC_QUOT,           KC_GRAVE,          \
+U_NA,              KC_ALGR,           TD(U_TD_U_FUN),    TD(U_TD_U_MEDIA),  U_NA,              OU_AUTO,           KC_RBRC,           KC_LBRC,           KC_DOT,            KC_GRAVE,          \
 U_NP,              U_NP,              U_NA,              U_NA,              U_NA,              KC_MSTP,           KC_MPLY,           KC_MUTE,           U_NP,              U_NP
 
 #define MIRYOKU_LAYER_FUN \
 KC_F12,            KC_F7,             KC_F8,             KC_F9,             KC_PSCR,           U_NA,              TD(U_TD_U_BASE),   TD(U_TD_U_EXTRA),  U_NA,              TD(U_TD_BOOT),     \
 KC_F11,            KC_F4,             KC_F5,             KC_F6,             KC_SCRL,           U_NA,              KC_LSFT,           KC_LCTL,           KC_LALT,           KC_LGUI,           \
-KC_F10,            KC_F1,             KC_F2,             KC_F3,             KC_PAUS,           U_NA,              KC_BACKSPACE,      KC_TAB,            KC_CAPS_LOCK,      U_NA,              \
+KC_F10,            KC_F1,             KC_F2,             KC_F3,             LCTL(LALT(LGUI(KC_F23))),U_NA,        KC_BACKSPACE,      KC_TAB,            KC_CAPS_LOCK,      U_NA,              \
 U_NP,              U_NP,              KC_APP,            KC_SPC,            KC_TAB,            U_NA,              U_NA,              U_NA,              U_NP,              U_NP
 
 // redefine QWERTY so it calls the correct symbols layer we've just defined
 #define MIRYOKU_LAYER_EXTRA \
 KC_Q,              KC_W,              KC_E,              KC_R,              KC_T,              KC_Y,              KC_U,              KC_I,              KC_O,              KC_P,              \
 LGUI_T(KC_A),      LALT_T(KC_S),      LCTL_T(KC_D),      LSFT_T(KC_F),      KC_G,              KC_H,              LSFT_T(KC_J),      LCTL_T(KC_K),      LALT_T(KC_L),      LGUI_T(KC_SCLN),   \
-KC_Z,              KC_X,              KC_C,              KC_V,              KC_B,              KC_N,              KC_M,              MY_COMMA,          MY_DOT,            MY_SLASH,          \
+KC_Z,              KC_X,              KC_C,              KC_V,              KC_B,              KC_N,              KC_M,              KC_COMMA,          MY_DOT,            MY_SLASH,          \
 U_NP,              U_NP,              LT(U_MEDIA,KC_ESC),LT(U_NAV,KC_SPC),  LT(U_MOUSE,KC_TAB),LT_SYM_ENT,        LT_NUM_BSPC,       LT(U_FUN,KC_DEL),  U_NP,              U_NP
 
 
