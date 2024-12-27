@@ -4,7 +4,7 @@
 KC_Q,              KC_W,              KC_F,              KC_P,              KC_B,              KC_J,              KC_L,              KC_U,              KC_Y,              KC_QUOT,           \
 LGUI_T(KC_A),      LALT_T(KC_R),      LCTL_T(KC_S),      LSFT_T(KC_T),      KC_G,              KC_M,              LSFT_T(KC_N),      LCTL_T(KC_E),      LALT_T(KC_I),      LGUI_T(KC_O),      \
 KC_Z,              KC_X,              KC_C,              KC_D,              KC_V,              KC_K,              KC_H,              KC_COMM,           KC_DOT,            KC_SLSH,           \
-U_NP,              U_NP,              LT(U_MEDIA,KC_ESC),LT(U_NAV,KC_SPC),  LT(U_MOUSE,KC_TAB),LT(U_SYM,U_NA),    LT(U_NUM,KC_BSPC), LT(U_FUN,KC_DEL),  U_NP,              U_NP
+U_NP,              U_NP,              LT(U_MEDIA,KC_ESC),LT(U_NAV,KC_SPC),  LT(U_MOUSE,KC_TAB),LT(U_SYM,KC_ENT),  LT(U_NUM,KC_BSPC), LT(U_FUN,KC_DEL),  U_NP,              U_NP
 
 #define MIRYOKU_LAYER_NAV \
 TD(U_TD_BOOT),     U_NA,              TD(U_TD_U_EXTRA),  TD(U_TD_U_BASE),   KC_LCBR,           KC_RCBR,           KC_HOME,           KC_UP,             KC_END,            KC_PGUP,           \
@@ -48,6 +48,12 @@ KC_Q,              KC_W,              KC_E,              KC_R,              KC_T
 LGUI_T(KC_A),      LALT_T(KC_S),      LCTL_T(KC_D),      LSFT_T(KC_F),      KC_G,              KC_H,              LSFT_T(KC_J),      LCTL_T(KC_K),      LALT_T(KC_L),      LGUI_T(KC_SCLN),   \
 KC_Z,              KC_X,              KC_C,              KC_V,              KC_B,              KC_N,              KC_M,              KC_COMMA,          MY_DOT,            MY_SLASH,          \
 U_NP,              U_NP,              LT(U_MEDIA,KC_ESC),LT(U_NAV,KC_SPC),  LT(U_MOUSE,KC_TAB),LT_SYM_ENT,        LT_NUM_BSPC,       LT(U_FUN,KC_DEL),  U_NP,              U_NP
+
+#define MIRYOKU_LAYER_BUTTON \
+LCTL(LALT(LGUI(KC_Q))), LCTL(LALT(LGUI(KC_W))), LCTL(LALT(LGUI(KC_F))), LCTL(LALT(LGUI(KC_P))), LCTL(LALT(LGUI(KC_B))),   LCTL(LALT(LGUI(KC_J))), LCTL(LALT(LGUI(KC_L))),  LCTL(LALT(LGUI(KC_U))),    LCTL(LALT(LGUI(KC_Y))),   LCTL(LALT(LGUI(KC_QUOT))), \
+LCTL(LALT(LGUI(KC_A))), LCTL(LALT(LGUI(KC_R))), LCTL(LALT(LGUI(KC_S))), LCTL(LALT(LGUI(KC_T))), LCTL(LALT(LGUI(KC_G))),   LCTL(LALT(LGUI(KC_M))), LCTL(LALT(LGUI(KC_N))),  LCTL(LALT(LGUI(KC_E))),    LCTL(LALT(LGUI(KC_I))),   LCTL(LALT(LGUI(KC_O))),    \
+LCTL(LALT(LGUI(KC_Z))), LCTL(LALT(LGUI(KC_X))), LCTL(LALT(LGUI(KC_C))), LCTL(LALT(LGUI(KC_D))), LCTL(LALT(LGUI(KC_V))),   LCTL(LALT(LGUI(KC_K))), LCTL(LALT(LGUI(KC_H))),  LCTL(LALT(LGUI(KC_COMM))), LCTL(LALT(LGUI(KC_DOT))), LCTL(LALT(LGUI(KC_SLSH))), \
+U_NP,                   U_NP,                   U_NP,                   U_NP,                   U_NP,                     U_NP,                   U_NP,                    U_NP,                      U_NP,                     U_NP
 
 
 // redefine layer definition table to include the new layer
