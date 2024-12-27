@@ -14,12 +14,12 @@ cd ~/git/geoip/
 echo "Pulling geoip"
 git pull
 
-mkdir -p ../tmp/
-rm -rf ../tmp/*
-cp -r * ../tmp/
-cd ../tmp
+rm -rf    /tmp/xray_updater
+mkdir -p  /tmp/xray_updater
+cp -r ./* /tmp/xray_updater/
+cd /tmp/xray_updater
 
-cp ../home-automation/geoip-config.json config.json
+cp ~/git/home-automation/xray/geoip-config.json config.json
 
 # get netflix
 curl --silent "https://api.bgpview.io/asn/2906/prefixes" | jq ".data.ipv4_prefixes[].prefix" | sed 's|"||g'>./netflix.txt
@@ -52,7 +52,7 @@ go run ./
 
 # move
 echo "Moving..."
-mv output/dat/mygeo.dat ~/git/home-automation/
+mv output/dat/mygeo.dat ~/git/home-automation/xray/
 
 echo "Pulling domains"
 cd ~/git/domain-list-community
@@ -70,14 +70,14 @@ go run ./
 
 #move
 echo "Moving..."
-mv dlc.dat ~/git/home-automation/mysites.dat
+mv dlc.dat ~/git/home-automation/xray/mysites.dat
 
-echo "Pushinig cript"
+echo "Pushinig script"
 cd ~/git/home-automation
 scp mysites.dat mygeo.dat root@r5s.bruc:/usr/share/xray/
 git add mysites.dat
 git add mygeo.dat
 git add xray-prep-updates.sh
 git add geoip-config.json
-git commit -m "upd"
+git commit -m "auto-upd"
 git push

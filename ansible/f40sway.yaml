@@ -1,0 +1,547 @@
+---
+- name: Setup Fedora system install Albert and Google Chrome
+  hosts: ago.lan
+  become: yes  # Sudo permissions for the whole playbook
+
+  vars:
+    local_ssh_key_path: "~/.ssh/id_rsa"
+    local_ssh_auth_path: "~/.ssh/authorized_keys"
+    stow_directory: "/home/chuck/.dotfiles"
+    target_directory: "/home/chuck"
+    git_dir: "/usr/share/git"
+
+  tasks:
+    - name: Update all installed packages
+      dnf:
+        name: "*"
+        state: latest
+
+    - name: Get Fedora version
+      shell: rpm -E %fedora
+      register: fedora_version
+      changed_when: False
+
+      ###################################
+    - name: Import RPM Fusion free GPG key
+      rpm_key:
+        key: https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-free-fedora-2020
+        state: present
+
+      ###################################
+    - name: Import RPM Fusion nonfree GPG key
+      rpm_key:
+        key: https://rpmfusion.org/keys?action=AttachFile&do=get&target=RPM-GPG-KEY-rpmfusion-nonfree-fedora-2020
+        state: present    
+
+      ###################################
+    - name: Install rpmfusion-free-release
+      dnf:
+        name: "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ fedora_version.stdout }}.noarch.rpm"
+        state: present
+        disable_gpg_check: yes
+
+        ###################################
+    - name: Install rpmfusion-nonfree-release
+      dnf:
+        name: "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ fedora_version.stdout }}.noarch.rpm"
+        state: present
+        disable_gpg_check: yes
+
+    - name: Ensure modules are installed
+      dnf:
+        name:
+          - autofs
+          - bat
+          - btop
+          - dnf-plugins-core
+          - easyeffects
+          - entr
+          - fd-find
+          - flatpak
+          - git
+          - helvum
+          - htop
+          - lpf-spotify-client
+          - mosquitto
+          - mtr
+          - neovim
+          - net-tools
+          - obs-studio
+          - perl
+          - pipewire-jack-audio-connection-kit
+          - pipewire-plugin-libcamera
+          - qalc
+          - qpwgraph
+          - readline-devel
+          - stow
+          - unzip
+          - usbip
+            # for warpd compile            
+          - cairo-devel
+          - libxkbcommon-devel
+          - wayland-devel
+           # for grim/slurp
+          - cmake
+          - libxkbcommon
+          - meson
+          - scdoc
+          - wayland-protocols-devel
+            # for OBS virtual camera
+          - v4l2loopback
+          - kmod-v4l2loopback
+            # for swayimg
+          - json-c-devel
+            # for Master PDF Editor
+          - xsane
+        state: present
+        allowerasing: yes
+
+# ###################################
+    - name: Ensure modprobe configuration is permanent
+      copy:
+        dest: /etc/modprobe.d/usbip.conf
+        content: |
+          options vhci-hcd
+        owner: root
+        group: root
+        mode: '0644'
+
+# ###################################
+# disable SELinux
+    - name: Update kernel parameter for SELinux
+      ansible.builtin.shell:
+        cmd: grubby --update-kernel ALL --args selinux=0
+      become: yes
+
+# ###################################
+# chuck in wheel and no password prompt
+    - name: Ensure user 'chuck' is present and added to the 'wheel' group
+      user:
+        name: chuck
+        state: present
+        groups: wheel,audio
+        append: yes  # This ensures chuck is added to the wheel group without removing him from other groups he might belong to
+        create_home: yes  # This ensures that a home directory is created for the user
+
+    - name: Ensure `wheel` can use sudo without a password
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: '/usr/sbin/visudo -cf %s'  # This line checks for syntax errors in the sudoers file
+
+###################################
+    - name: Add the OpenSUSE repository for Albert
+      yum_repository:
+        name: manuelschneid3r
+        description: OpenSUSE Repository for Albert
+        baseurl: https://download.opensuse.org/repositories/home:/manuelschneid3r/Fedora_40/
+        gpgcheck: no  # Set to 'yes' and provide 'gpgkey' URL if repository keys are available and should be validated
+
+    - name: Install Albert
+      dnf:
+        name: albert
+        state: present
+
+###################################
+    - name: Ensure the ~/.ssh directory exists for user 'chuck'
+      file:
+        path: "/home/chuck/.ssh"
+        state: directory
+        owner: chuck
+        group: chuck
+        mode: '0700'
+      become_user: chuck
+
+    - name: Copy local SSH private key to root's home
+      copy:
+        src: "{{ local_ssh_key_path }}"
+        dest: "/root/.ssh/id_rsa"
+        mode: '0600'
+        owner: root
+        group: root
+      when: ansible_user_id == 'root'
+
+    - name: Copy local SSH private key to chuck's home
+      copy:
+        src: "{{ local_ssh_key_path }}"
+        dest: "/home/chuck/.ssh/id_rsa"
+        mode: '0600'
+        owner: chuck
+        group: chuck
+      become: yes
+      become_user: chuck
+      when: ansible_user_id == 'root'
+
+    - name: Copy local SSH authorized_keys key to root's home
+      copy:
+        src: "{{ local_ssh_auth_path }}"
+        dest: "/root/.ssh/authorized_keys"
+        mode: '0600'
+        owner: root
+        group: root
+      when: ansible_user_id == 'root'
+
+    - name: Copy local SSH authorized_keys key to chuck's home
+      copy:
+        src: "{{ local_ssh_auth_path }}"
+        dest: "/home/chuck/.ssh/authorized_keys"
+        mode: '0600'
+        owner: chuck
+        group: chuck
+      become: yes
+      become_user: chuck
+      when: ansible_user_id == 'root'
+
+###################################
+    # Setting Git configuration for root
+    - name: Set global Git username for root
+      git_config:
+        name: user.name
+        value: bogorad
+        scope: global
+
+    - name: Set global Git email for root (adjust email as needed)
+      git_config:
+        name: user.email
+        value: bogorad@gmail.com
+        scope: global
+
+    # Setting Git configuration for chuck
+    - name: Set global Git username for chuck
+      git_config:
+        name: user.name
+        value: bogorad
+        scope: global
+      become_user: chuck
+    
+    - name: Set global Git email for chuck (adjust email as needed)
+      git_config:
+        name: user.email
+        value: bogorad@gmail.com
+        scope: global
+      become_user: chuck
+
+    - name: Ensure GitHub is in known hosts for root
+      known_hosts:
+        name: "github.com"
+        key: "{{ lookup('pipe', 'ssh-keyscan -t ed25519 github.com') }}"
+        path: "/etc/ssh/ssh_known_hosts"
+      become: yes
+
+    - name: Ensure GitHub is in known hosts for chuck
+      known_hosts:
+        name: "github.com"
+        key: "{{ lookup('pipe', 'ssh-keyscan -t ed25519 github.com') }}"
+        path: "/home/chuck/.ssh/ssh_known_hosts"
+      become_user: chuck
+
+###################################
+    - name: Install Fedora Workstation Repositories
+      dnf:
+        name: fedora-workstation-repositories
+        state: present
+    
+    - name: Enable Google Chrome repository
+      command: dnf config-manager --set-enabled google-chrome
+
+    - name: Install Google Chrome
+      dnf:
+        name: google-chrome-stable
+        state: present
+
+    - name: Setup cron job for auto-updating Google Chrome
+      cron:
+        name: "Update Google Chrome"
+        special_time: "weekly"
+        job: "dnf update google-chrome-stable -y"
+        user: root
+
+###################################
+    - name: Verbose clone of .dotfiles
+      shell: git clone -v git@github.com:bogorad/.dotfiles.git /home/chuck/.dotfiles/
+      args:
+        creates: /home/chuck/.dotfiles
+      become: yes
+      become_user: chuck
+
+    - name: Cleanup for Stow
+      file:
+        path: "/home/chuck/{{ item }}"
+        state: absent
+      with_items:
+        - .git_config
+        - .gitconfig
+        - .bashrc
+      become: yes  # if required to modify files in protected directories
+
+    - name: Find all directories within the stow directory
+      ansible.builtin.find:
+        paths: "{{ stow_directory }}"
+        file_type: directory
+      register: found_dirs
+
+    - name: Stow each directory
+      ansible.builtin.command:
+        cmd: "stow -t {{ target_directory }} -d {{ stow_directory }} {{ item.path | basename }}"
+      with_items: "{{ found_dirs.files }}"
+      when: found_dirs.matched > 0
+
+    - name: Create symbolic link from /etc/kanata to ~/.dotfiles/kanata/.config/kanata
+      file:
+        src: "/home/chuck/.dotfiles/kanata/.config/kanata"
+        dest: "/etc/kanata"
+        state: link
+        force: yes
+      become: yes  # Needs root permission to create link in /etc
+
+###################################
+    - name: Ensure tmux plugin directory exists
+      ansible.builtin.file:
+        path: "/home/chuck/.tmux/plugins/tpm"
+        state: directory
+        owner: chuck
+        group: chuck
+        mode: '0755'
+
+    - name: Clone tpm repository
+      ansible.builtin.git:
+        repo: 'git@github.com:tmux-plugins/tpm.git'
+        dest: '/home/chuck/.tmux/plugins/tpm'
+        clone: yes
+        update: yes
+      become: yes
+      become_user: chuck
+
+###################################
+    - name: Install Rust Programming Language
+      shell: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source $HOME/.cargo/env
+      args:
+        creates: "$HOME/.cargo/bin/rustc"
+      environment:
+        HOME: "{{ ansible_env.HOME }}"
+
+###################################
+# git - clone and build
+    - name: Ensure git directory exists
+      ansible.builtin.file:
+        path: "{{ git_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Clone repositories if they don't exist, otherwise pull
+      git:
+        repo: "{{ item.repo }}"
+        dest: "{{ git_dir }}/{{ item.dest }}"
+        clone: yes
+        update: yes
+      loop:
+        - { repo: 'git@github.com:jtroo/kanata.git', dest: 'kanata', name: 'kanata' }
+        - { repo: 'git@github.com:doy/rbw.git', dest: 'rbw', name: 'rbw' }
+        - { repo: 'git@github.com:sxyazi/yazi.git', dest: 'yazi', name: 'yazi' }
+        - { repo: 'git@github.com:rvaiya/warpd.git', dest: 'warpd', name: 'warpd' }
+        - { repo: 'git@github.com:emersion/slurp.git', dest: 'slurp', name: 'slurp' }
+        - { repo: 'git@github.com:artemsen/swayimg.git', dest: 'swayimg', name: 'swayimg' }
+      when: not (git_dir + '/' + item.dest) is directory
+
+    - name: Pull latest changes for existing repositories
+      git:
+        repo: "{{ item.repo }}"
+        dest: "{{ git_dir }}/{{ item.dest }}"
+        update: yes
+      loop:
+        - { repo: 'git@github.com:jtroo/kanata.git', dest: 'kanata', name: 'kanata' }
+        - { repo: 'git@github.com:doy/rbw.git', dest: 'rbw', name: 'rbw' }
+        - { repo: 'git@github.com:sxyazi/yazi.git', dest: 'yazi', name: 'yazi' }
+        - { repo: 'git@github.com:rvaiya/warpd.git', dest: 'warpd', name: 'warpd' }
+        - { repo: 'git@github.com:emersion/slurp.git', dest: 'slurp', name: 'slurp' }
+        - { repo: 'git@github.com:artemsen/swayimg.git', dest: 'swayimg', name: 'swayimg' }
+      when: (git_dir + '/' + item.dest) is directory
+
+    - name: Build projects
+      block:
+        - name: Check if Rust project binaries exist
+          ansible.builtin.stat:
+            path: "{{ git_dir }}/{{ item.dest }}/target/release/{{ item.name }}"
+          register: rust_binary
+          loop:
+            - { dest: 'kanata', name: 'kanata' }
+            - { dest: 'rbw', name: 'rbw' }
+
+        - name: Check if yazi binaries exist
+          ansible.builtin.stat:
+            path: "{{ git_dir }}/yazi/target/release/{{ item }}"
+          register: yazi_binaries
+          loop:
+            - 'yazi'
+            - 'ya'
+
+        - name: Build kanata and rbw
+          ansible.builtin.command:
+            cmd: "cargo build --release {{ '--features cmd' if item.item.name == 'kanata' else '' }}"
+            chdir: "{{ git_dir }}/{{ item.item.dest }}"
+          loop: "{{ rust_binary.results }}"
+          when: not item.stat.exists
+
+        - name: Build yazi
+          ansible.builtin.command:
+            cmd: "cargo build --release"
+            chdir: "{{ git_dir }}/yazi"
+          when: not yazi_binaries.results[0].stat.exists or not yazi_binaries.results[1].stat.exists
+
+        - name: Build warpd
+          ansible.builtin.command:
+            cmd: "make DISABLE_X=1"
+            chdir: "{{ git_dir }}/warpd"
+
+        - name: Setup meson build
+          ansible.builtin.command:
+            cmd: "meson setup build"
+            chdir: "{{ git_dir }}/{{ item }}"
+          loop:
+            - 'slurp'
+            - 'swayimg'
+
+        - name: Build and install with ninja
+          ansible.builtin.command:
+            cmd: "ninja -C build install"
+            chdir: "{{ git_dir }}/{{ item }}"
+          loop:
+            - 'slurp'
+            - 'swayimg'
+
+##### Cleanup before moving
+    - name: Stop kanata service
+      systemd:
+        name: kanata
+        state: stopped
+      ignore_errors: yes
+
+    - name: Kill specified processes
+      command: pkill -9 {{ item }}
+      loop:
+        - kanata
+        - rbw
+        - yazi
+        - warpd
+        - slurp
+      ignore_errors: yes
+
+##### move
+    - name: Check if the files exist before moving
+      stat:
+        path: "{{ git_dir }}/{{ item.src }}"
+      register: stat_result
+      loop:
+        - { src: 'kanata/target/release/kanata', dest: '/usr/bin/kanata' }
+        - { src: 'rbw/target/release/rbw', dest: '/usr/bin/rbw' }
+        - { src: 'rbw/target/release/rbw-agent', dest: '/usr/bin/rbw-agent' }
+        - { src: 'yazi/target/release/ya', dest: '/usr/bin/ya' }
+        - { src: 'yazi/target/release/yazi', dest: '/usr/bin/yazi' }
+        - { src: 'warpd/bin/warpd', dest: '/usr/bin/warpd' }
+
+    - name: Create softlinks in /usr/bin if the source files exist
+      file:
+        src: "{{ git_dir }}/{{ item.item.src }}"
+        dest: "{{ item.item.dest }}"
+        state: link
+      loop: "{{ stat_result.results }}"
+      when: item.stat.exists
+      become: yes
+
+###################################
+    - name: Setup systemd service for kanata
+      copy:
+        content: |
+          [Unit]
+          Description=Kanata Service
+          After=network.target
+
+          [Service]
+          ExecStart=/home/chuck/.dotfiles/kanata/.config/kanata/kanata.sh
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/kanata.service
+        mode: '0644'
+    
+    - name: Enable and start kanata systemd service
+      systemd:
+        name: kanata
+        enabled: yes
+        state: started
+
+###################################
+# Install zoxide for user chuck
+    - name: Install zoxide for user chuck
+      ansible.builtin.shell:
+        cmd: curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
+        executable: /bin/bash
+
+###################################
+    - name: Fetch SSH keys from GitHub user bogorad
+      uri:
+        url: https://api.github.com/users/bogorad/keys
+        method: GET
+        return_content: yes
+        headers:
+          Accept: application/vnd.github.v3+json
+      register: github_response
+
+    - name: Configure authorized keys for root from GitHub
+      lineinfile:
+        path: "/root/.ssh/authorized_keys"
+        line: "{{ item.key }}"
+        state: present
+        create: yes
+        mode: '0600'
+        owner: root
+        group: root
+      loop: "{{ github_response.json }}"
+      when: github_response.status == 200
+
+    - name: Configure authorized keys for chuck from GitHub
+      lineinfile:
+        path: "/home/chuck/.ssh/authorized_keys"
+        line: "{{ item.key }}"
+        state: present
+        create: yes
+        mode: '0600'
+        owner: chuck
+        group: chuck
+      loop: "{{ github_response.json }}"
+      when: github_response.status == 200
+      become_user: chuck
+
+###################################
+    - name: Download the 3270 Nerd Font zip
+      get_url:
+        url: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/3270.zip
+        dest: /tmp/3270.zip
+        mode: '0644'
+
+    - name: Create /usr/share/fonts if not exists
+      file:
+        path: /usr/share/fonts
+        state: directory
+        mode: '0755'
+
+    - name: Unzip the font zip to /usr/share/fonts
+      unarchive:
+        src: /tmp/3270.zip
+        dest: /usr/share/fonts
+        remote_src: yes
+
+    - name: Refresh font cache
+      command: fc-cache -f
+
+###################################
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+
