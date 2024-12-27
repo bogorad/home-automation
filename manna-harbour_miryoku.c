@@ -139,23 +139,22 @@ const key_override_t *key_overrides[] = {
     &capsword_key_override
 };
 
-
 ///////////////////////////////////////////////////////////////////////////
 // 4
-const uint16_t PROGMEM combo_caps_word[]  = {KC_P,    KC_L,    COMBO_END};
+const uint16_t PROGMEM combo_caps_word[]  = {LSFT_T(KC_T), LSFT_T(KC_N), COMBO_END}; // T+N
 const uint16_t PROGMEM switch_to_rus[]    = {KC_D,    KC_H,    COMBO_END};
-const uint16_t PROGMEM just_meta[]        = {LGUI_T(KC_A), LGUI_T(KC_O), COMBO_END};
+const uint16_t PROGMEM just_meta[]        = {LGUI_T(KC_A), LGUI_T(KC_O), COMBO_END}; // A+O
 const uint16_t PROGMEM buttons_oneshot[]  = {KC_Z,    KC_SLSH, COMBO_END};
-// enter/shift_enter/tab/copy/paste 5
+// enter/shift_enter/control_enter,tab/paste +5=9
 const uint16_t PROGMEM my_enter[]         = {KC_U,    KC_Y,    COMBO_END};
 const uint16_t PROGMEM my_s_enter[]       = {KC_L,    KC_U,    COMBO_END};
-const uint16_t PROGMEM my_tab[]           = {KC_F,    KC_P,    COMBO_END};
-const uint16_t PROGMEM my_copy[]          = {KC_Z,    KC_Y,    COMBO_END}; // unused
+const uint16_t PROGMEM my_c_enter[]       = {LCTL_T(KC_E), LALT_T(KC_I), COMBO_END}; // E+I
+const uint16_t PROGMEM my_tab[]           = {LCTL_T(KC_S), LSFT_T(KC_T), COMBO_END}; // S+T
 const uint16_t PROGMEM my_paste[]         = {KC_C,    KC_D,    COMBO_END};
-// vim 2
+// vim +2=11
 const uint16_t PROGMEM vim_save[]         = {KC_W,    KC_F,    COMBO_END};
 const uint16_t PROGMEM vim_cmd[]          = {KC_Z,    KC_Y,    COMBO_END}; // unused
-// ,.? 3
+// ,.? +3=14
 const uint16_t PROGMEM my_comma[]         = {KC_H,    KC_COMM, COMBO_END};
 const uint16_t PROGMEM my_dot[]           = {KC_COMM, KC_DOT,  COMBO_END};
 const uint16_t PROGMEM my_question[]      = {KC_DOT,  KC_SLSH, COMBO_END};
@@ -170,10 +169,8 @@ combo_t key_combos[COMBO_COUNT] =
     //
     COMBO(my_enter,         KC_ENTER),
     COMBO(my_s_enter,       S(KC_ENTER)),
+    COMBO(my_c_enter,       C(KC_ENTER)),
     COMBO(my_tab,           KC_TAB),
-    // COMBO(my_undo,          C(KC_Z)),
-    // COMBO(my_cut,           C(KC_X)),
-    COMBO(my_copy,          U_CPY), // redefine
     COMBO(my_paste,         S(KC_INS)),
     //
     COMBO(vim_save,         VIM_SAVE),
@@ -189,18 +186,22 @@ combo_t key_combos[COMBO_COUNT] =
 // define fallback first
 void switch_to_english(void)
 {
-    // Save mods.
-    uint8_t mod_state = get_mods();
-    // Clear mods so Windows doesn't get confused.
-    clear_mods();
-    // Ctrl+Alt+0 sent to host
-    SEND_STRING(SS_LSFT(SS_LALT("0")));
-    // Switch to default layer.
-    layer_move(U_BASE);
     // debug
     dprint("Switched to English!\n");
-    // Restore mods.
-    set_mods(mod_state);
+    tap_code(KC_F21);
+    // Switch to default layer.
+    layer_move(U_BASE);
+    //
+    // // Save mods.
+    // uint8_t mod_state = get_mods();
+    // // Clear mods so Windows doesn't get confused.
+    // clear_mods();
+    // // Ctrl+Alt+0 sent to host
+    // SEND_STRING(SS_LSFT(SS_LALT("0")));
+    // // Switch to default layer.
+    // layer_move(U_BASE);
+    // // Restore mods.
+    // set_mods(mod_state);
 };
 
 #define RUS_LAYER_TIMEOUT 3000  // timeout in milliseconds
@@ -215,18 +216,22 @@ void switch_to_russian(void)
     }
     else
     {
-        // Save mods.
-        uint8_t mod_state = get_mods();
-        // Clear mods so Windows doesn't get confused.
-        clear_mods();
-        // Ctrl+Alt+1 sent to host
-        SEND_STRING(SS_LSFT(SS_LALT("1")));
-        // Switch to Cyrillic-friendly layer.
-        layer_move(U_EXTRA);
         // debug
         dprint("Switched to Russian!\n");
-        // Restore mods.
-        set_mods(mod_state);
+        //
+        tap_code(KC_F22);
+        // Switch to Cyrillic-friendly layer.
+        layer_move(U_EXTRA);
+        // // Save mods.
+        // uint8_t mod_state = get_mods();
+        // // Clear mods so Windows doesn't get confused.
+        // clear_mods();
+        // // Ctrl+Alt+1 sent to host
+        // SEND_STRING(SS_LSFT(SS_LALT("1")));
+        // // Switch to Cyrillic-friendly layer.
+        // layer_move(U_EXTRA);
+        // // Restore mods.
+        // set_mods(mod_state);
     };
 };
 
