@@ -1,0 +1,338 @@
+substitutions:
+  LOCATION: "change_me!!!"
+  friendly_name: "radar_${LOCATION}"
+
+wifi:
+
+api:
+
+#############################################################################################################################
+# Typical configuration:
+# ======================
+# delay_det_time=60
+#
+# ind_max=32
+# ind_min=3
+#
+# th1 is motion threshold, don't report value lower than
+# th1=1200
+# mov_sn=1
+#
+# th1 is occupancy threshold, don't report value lower than
+# th2=110
+# occ_sn=1
+#
+# th3=50000 (long-range, higher value means detection at shorter range)
+#############################################################################################################################
+
+packages:
+  esphome.bluetooth-proxy: github://esphome/bluetooth-proxies/m5stack-atom-lite.yaml@main
+
+esphome:
+  name: radar_${LOCATION}
+  name_add_mac_suffix: false
+  on_boot:    #LD1115H Initial Setting
+    priority: -200
+    then:
+      - uart.write:
+          id: LD1115H_UART_BUS
+          data: !lambda |-
+            std::string th1st = "th1=" + str_sprintf("%.0f",id(th1_motion).state) +" \n";
+            return std::vector<uint8_t>(th1st.begin(), th1st.end());
+      - delay: 250ms
+      - uart.write:
+          id: LD1115H_UART_BUS
+          data: !lambda |-
+            std::string th2st = "th2=" + str_sprintf("%.0f",id(th2_occupancy).state) +" \n";
+            return std::vector<uint8_t>(th2st.begin(), th2st.end());
+      - delay: 250ms
+      - uart.write:
+          id: LD1115H_UART_BUS
+          data: !lambda |-
+            std::string th3st = "th3=" + str_sprintf("%.0f",id(th3_range).state) +" \n";
+            return std::vector<uint8_t>(th3st.begin(), th3st.end());
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/ssieb/custom_components #Thanks for @ssieb components.
+    components: [ serial ]
+
+# Configuration of M5 Atom Lite onboard RGB LED
+light:
+  - platform: esp32_rmt_led_strip
+    rgb_order: GRB
+    pin: 27
+    num_leds: 1
+    rmt_channel: 0
+    chipset: SK6812
+    is_rgbw: true
+    id: m5stack_led
+    name: "Light"
+    icon: "mdi:led-outline"
+    effects:
+      - random:
+      - flicker:
+      - addressable_rainbow:
+
+ota:
+  password: !secret ota_password
+
+logger:
+  level: DEBUG
+
+binary_sensor:
+  - platform: gpio
+    name: "Occupancy"
+    id: m5stack_occupancy
+    device_class: occupancy
+    icon: "mdi:radar"
+    pin:
+      number: 33 # ${INPUT_PIN}
+      mode:
+        input: true
+        pullup: false
+
+  - platform: template
+    name: "Motion"
+    id: m5stack_motion
+    icon: "mdi:motion-sensor"
+
+  - platform: gpio
+    name: "Button"
+    id: m5stack_button
+    pin:
+      number: 39 # button
+      inverted: true
+
+  - platform: ble_presence
+    ibeacon_uuid: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    name: "myphone-ibeacon"
+    id: m5stack_presence
+    device_class: presence
+    icon: "mdi:cellphone-basic"
+
+uart:
+  id: LD1115H_UART_BUS
+  tx_pin: 21 # ${TX_PIN}
+  rx_pin: 25 # ${RX_PIN}
+  baud_rate: 115200
+  setup_priority: 200 #Set Priority To Prevent Boot Loop or Fail
+
+number:
+  - platform: template
+    name: "th1 motion"
+    id: th1_motion
+    icon: "mdi:cogs"
+    optimistic: true
+    restore_value: true
+    initial_value: 120
+    min_value: 10
+    max_value: 65535
+    step: 10
+    mode: box
+    set_action:
+      then:
+        - uart.write:
+            id: LD1115H_UART_BUS
+            data: !lambda |-
+              std::string th1st = "th1=" + str_sprintf("%.0f",x) +" \n";
+              return std::vector<uint8_t>(th1st.begin(), th1st.end());
+        - delay: 250ms
+        - uart.write: "save\n"
+
+  - platform: template
+    name: "th2 occupancy"
+    id: th2_occupancy
+    icon: "mdi:cogs"
+    optimistic: true
+    restore_value: true    
+    initial_value: 250
+    min_value: 10
+    max_value: 65535
+    step: 10
+    mode: box
+    set_action:
+      then:
+        - uart.write:
+            id: LD1115H_UART_BUS
+            data: !lambda |-
+              std::string th2st = "th2=" + str_sprintf("%.0f",x) +" \n";
+              return std::vector<uint8_t>(th2st.begin(), th2st.end());
+        - delay: 250ms
+        - uart.write: "save\n"
+
+  - platform: template
+    name: "th3 range"
+    id:   th3_range
+    icon: "mdi:cogs"
+    min_value: 0
+    max_value: 65535
+    initial_value: 250
+    optimistic: true
+    step: 1
+    restore_value: true
+    mode: slider
+    set_action:
+      then:
+        - uart.write:
+            id: LD1115H_UART_BUS
+            data: !lambda |-
+              std::string th3st = "th3=" + str_sprintf("%.0f",x) +" \n";
+              return std::vector<uint8_t>(th3st.begin(), th3st.end());
+        - delay: 250ms
+        - uart.write: "save\n"
+
+  - platform: template
+    name: "dtime"
+    id:   m5stack_delay_det_time
+    icon: "mdi:timer-sand-empty"
+    min_value: 1
+    max_value: 60
+    initial_value: 5
+    optimistic: true
+    step: 1
+    restore_value: true
+    mode: box
+    set_action:
+      - uart.write: !lambda
+                      int cm = (int)x;
+                      std::string cms = "dtime=" + to_string(cm) +" \n";
+                      return std::vector<unsigned char>(cms.begin(), cms.end());
+      - delay: 250ms
+      - uart.write: "save\n"
+
+  - platform: template
+    name: "mov_sn"
+    id:   m5stack_mov_sn
+    min_value: 0
+    max_value: 255
+    initial_value: 3
+    optimistic: true
+    step: 1
+    restore_value: true    
+    mode: box
+    set_action:
+      - uart.write: !lambda
+                      int cm = (int)x;
+                      std::string cms = "mov_sn=" + to_string(cm) +" \n";
+                      return std::vector<unsigned char>(cms.begin(), cms.end());
+      - delay: 250ms
+      - uart.write: "save\n"
+
+  - platform: template
+    name: "occ_sn"
+    id: m5stack_occ_sn
+    min_value: 0
+    max_value: 255
+    initial_value: 5
+    optimistic: true
+    step: 1
+    restore_value: true    
+    mode: box
+    set_action:
+      - uart.write: !lambda
+                      int cm = (int)x;
+                      std::string cms = "occ_sn=" + to_string(cm) +" \n";
+                      return std::vector<unsigned char>(cms.begin(), cms.end());
+      - delay: 250ms
+      - uart.write: "save\n"
+
+  - platform: template
+    name: "ind_min"
+    id:   m5stack_ind_min
+    min_value: 0
+    max_value: 32
+    initial_value: 2
+    optimistic: true
+    step: 1
+    restore_value: true    
+    mode: box
+    set_action:
+      - uart.write: !lambda
+                      int cm = (int)x;
+                      std::string cms = "ind_min=" + to_string(cm) +" \n";
+                      return std::vector<unsigned char>(cms.begin(), cms.end());
+      - delay: 250ms
+      - uart.write: "save\n"
+
+  - platform: template
+    name: "ind_max"
+    id:   m5stack_ind_max
+    min_value: 0
+    max_value: 32
+    initial_value: 32
+    optimistic: true
+    step: 1
+    restore_value: true    
+    mode: box
+    set_action:
+      - uart.write: !lambda
+                      int cm = (int)x;
+                      std::string cms = "ind_max=" + to_string(cm) +" \n";
+                      return std::vector<unsigned char>(cms.begin(), cms.end());
+      - delay: 250ms
+      - uart.write: "save\n"
+
+text_sensor:
+  - platform: template
+    name: "mov"
+    id: mov
+    icon: "mdi:format-text"
+  - platform: template
+    name: "occ"
+    id: occ
+    icon: "mdi:format-text"
+  - platform: serial
+    uart_id: LD1115H_UART_BUS
+    name: "debug"
+    id:    uart_text
+    icon: "mdi:format-text"
+    internal: true #If Don't Want to See UART Receive Data, Set To True
+    on_value:
+      lambda: |-
+        if ((id(uart_text).state.substr(0,3) == "occ") and id(m5stack_debug_switch).state) {
+          id(occ).publish_state(id(uart_text).state.substr(5).c_str());
+        }
+        else if (id(uart_text).state.substr(0,3) == "mov") {
+          id(m5stack_motion).state = true;
+          id(m5stack_motion).publish_state(true);
+          if (id(m5stack_debug_switch).state) {
+            id(mov).publish_state(id(uart_text).state.substr(5).c_str());
+          }
+        }
+
+bluetooth_proxy:
+  active: true
+
+esp32_ble_tracker:
+
+esp32_improv:
+  authorizer: m5stack_button
+#  authorizer: none
+
+switch:
+  - platform: factory_reset
+    name: Restart with Factory Default Settings
+    entity_category: "diagnostic"
+
+  - platform: template
+    name: Enable DEBUG
+    id: m5stack_debug_switch
+    optimistic: True
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+
+interval:
+  - interval: 5s #Clearance Scan Time
+    setup_priority: -200
+    then:
+      lambda: |-
+        if (id(m5stack_motion).state) {
+            id(m5stack_motion).state = false;
+            id(m5stack_motion).publish_state(false);
+        }
+
