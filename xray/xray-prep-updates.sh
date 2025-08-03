@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # first check if all utils are available
 required=("curl" "jq" "go")
